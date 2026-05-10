@@ -158,24 +158,29 @@ hr.dv{border:none;border-top:1px solid var(--bdr);margin:16px 0}
   <button class="sbtn" onclick="goStep(5)"><span class="snum">5</span>Launch</button>
 </div>
 <div id="step1">
-  <div class="card"><div class="card-hd"><span class="card-ico">🏢</span>Select Ad Account</div>
-    <div class="conn-bar" id="connBar">
-      <div class="conn-bar-left"><span class="dot dot-amber" id="barDot"></span><span id="barText">Not connected — click the badge above to start</span></div>
-      <button class="btn btn-ghost btn-sm" onclick="loadAccounts()">↻ Retry</button>
+  <div class="card">
+    <div class="card-hd"><span class="card-ico">🏢</span>Ad Account</div>
+    <div class="info">Find your Ad Account ID in <strong>Meta Ads Manager → Account Settings</strong>. Format: <code>act_XXXXXXXXXX</code></div>
+    <div class="field">
+      <label>Ad Account ID</label>
+      <input type="text" id="manualAccountId" placeholder="act_1234567890" oninput="onManualAccount()">
     </div>
-    <div id="accountsLoading" class="loading-cell hidden"><div class="spinner-sm"></div> Loading ad accounts...</div>
-    <div id="accountsList" class="hidden">
-      <div class="field"><label>Ad Account</label>
-        <select id="selectedAccount" onchange="onAccountSelected()"><option value="">— Select account —</option></select>
-      </div>
-      <div id="accountDetails" class="hidden">
-        <div class="stats-grid" id="accountStats"></div>
-        <div class="info" id="accountInfo"></div>
-      </div>
+    <div class="field">
+      <label>Account Name (for reference)</label>
+      <input type="text" id="manualAccountName" placeholder="e.g. My Business Account">
+    </div>
+    <div class="field">
+      <label>Meta Access Token</label>
+      <input type="text" id="manualMetaToken" placeholder="EAAxxxxxxx..." oninput="onManualAccount()">
+      <div class="note">Sent to n8n to create the campaign. Never stored in the browser.</div>
     </div>
   </div>
-  <div class="nav-row"><span></span><button class="btn btn-primary" id="step1Next" onclick="goStep(2)" disabled>Next: Campaign Setup →</button></div>
+  <div class="nav-row">
+    <span></span>
+    <button class="btn btn-primary" id="step1Next" onclick="goStep(2)" disabled>Next: Campaign Setup →</button>
+  </div>
 </div>
+
 <div id="step2" class="hidden">
   <div class="card"><div class="card-hd"><span class="card-ico">📢</span>Campaign Settings</div>
     <div class="field"><label>Campaign Name</label><input type="text" id="campName" placeholder="e.g. Summer Sale 2025"></div>
@@ -278,7 +283,20 @@ hr.dv{border:none;border-top:1px solid var(--bdr);margin:16px 0}
 </div>
 </div>
 <script>
-const APP={step:1,connector:'meta',account:null,accountData:{},adsetsCount:1,adsCount:1};
+const APP={step:1,account:null,accountData:{},adsetsCount:1,adsCount:1};
+
+// ── STEP 1: MANUAL ACCOUNT INPUT ──
+function onManualAccount(){
+  const accountId=val('manualAccountId');
+  const token=val('manualMetaToken');
+  const btn=q('step1Next');
+  if(accountId && token){
+    APP.account={id:accountId, name:val('manualAccountName')||accountId};
+    btn.disabled=false;
+  } else {
+    btn.disabled=true;
+  }
+}
 const PERF_GOALS={OUTCOME_SALES:['Maximize Conversions','Maximize Conversion Value','Maximize Link Clicks','Maximize Landing Page Views','Maximize Reach'],OUTCOME_LEADS:['Maximize Leads','Maximize Conversions','Maximize Link Clicks','Maximize Reach'],OUTCOME_TRAFFIC:['Maximize Link Clicks','Maximize Landing Page Views','Maximize Reach','Maximize Impressions'],OUTCOME_AWARENESS:['Maximize Reach','Maximize Impressions','Maximize ThruPlay','Maximize 2-Second Views'],OUTCOME_ENGAGEMENT:['Maximize Post Engagement','Maximize ThruPlay','Maximize Reach'],OUTCOME_APP_PROMOTION:['Maximize App Installs','Maximize App Events','Maximize Link Clicks']};
 const CTAS=['Shop Now','Learn More','Sign Up','Book Now','Contact Us','Get Offer','Watch More','Send Message','Subscribe','Download','Get Quote','Apply Now'];
 const q=id=>document.getElementById(id);
