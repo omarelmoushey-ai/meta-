@@ -158,24 +158,20 @@ hr.dv{border:none;border-top:1px solid var(--bdr);margin:16px 0}
   <button class="sbtn" onclick="goStep(5)"><span class="snum">5</span>Launch</button>
 </div>
 <div id="step1">
-  <div class="card"><div class="card-hd"><span class="card-ico">🏢</span>Select Ad Account</div>
-    <div class="conn-bar" id="connBar">
-      <div class="conn-bar-left"><span class="dot dot-amber" id="barDot"></span><span id="barText">Not connected — click the badge above to start</span></div>
-      <button class="btn btn-ghost btn-sm" onclick="loadAccounts()">↻ Retry</button>
-    </div>
-    <div id="accountsLoading" class="loading-cell hidden"><div class="spinner-sm"></div> Loading ad accounts...</div>
-    <div id="accountsList" class="hidden">
-      <div class="field"><label>Ad Account</label>
-        <select id="selectedAccount" onchange="onAccountSelected()"><option value="">— Select account —</option></select>
-      </div>
-      <div id="accountDetails" class="hidden">
-        <div class="stats-grid" id="accountStats"></div>
-        <div class="info" id="accountInfo"></div>
-      </div>
+  <div class="card">
+    <div class="card-hd"><span class="card-ico">🏢</span>Ad Account</div>
+    <div class="info">Enter your account name exactly as it appears in <strong>Meta Ads Manager</strong>. n8n will look up the Account ID automatically.</div>
+    <div class="field">
+      <label>Account Name</label>
+      <input type="text" id="manualAccountName" placeholder="e.g. My Business Account" oninput="onManualAccount()">
     </div>
   </div>
-  <div class="nav-row"><span></span><button class="btn btn-primary" id="step1Next" onclick="goStep(2)" disabled>Next: Campaign Setup →</button></div>
+  <div class="nav-row">
+    <span></span>
+    <button class="btn btn-primary" id="step1Next" onclick="goStep(2)" disabled>Next: Campaign Setup →</button>
+  </div>
 </div>
+
 <div id="step2" class="hidden">
   <div class="card"><div class="card-hd"><span class="card-ico">📢</span>Campaign Settings</div>
     <div class="field"><label>Campaign Name</label><input type="text" id="campName" placeholder="e.g. Summer Sale 2025"></div>
@@ -378,7 +374,7 @@ function buildJSON(){
       ads.push({name:val('ad-name-'+i+'-'+j)||'Ad '+(j+1),ad_set_index:i,page_id:q('ad-page-'+i+'-'+j)?.value||'account_default',instagram_id:q('ad-ig-'+i+'-'+j)?.value||'account_default',creation_type:crType,existing_post_id:crType==='existing'?val('ad-postid-'+i+'-'+j):null,format:fmt,advantage_plus_creative:swOn('ad-advcr-'+i+'-'+j),creative:{title:val('ad-hl-'+i+'-'+j)||'',body:val('ad-pt-'+i+'-'+j)||'',image_url:val('ad-media-'+i+'-'+j)||'',link_url:utmUrl||val('ad-url-'+i+'-'+j)||'',display_url:val('ad-durl-'+i+'-'+j)||'',call_to_action:(q('ad-cta-'+i+'-'+j)?.value||'LEARN_MORE').toUpperCase().replace(/ /g,'_'),description:val('ad-desc-'+i+'-'+j)||''},status:'PAUSED'});
     }
   }
-  return {ad_account_id:APP.account?.id||val('manualAccountId')||'',meta_token:val('manualMetaToken')||'',campaign:{name:val('campName')||'Campaign',objective:obj,budget_type:bt,currency:curr,bid_strategy:bid,daily_budget:bt==='CBO'&&bp==='Daily'&&bamt?Math.round(bamt*100):null,lifetime_budget:bt==='CBO'&&bp==='Lifetime'&&bamt?Math.round(bamt*100):null,status:'PAUSED'},ad_sets:adSets,ads};
+  return {account_name:APP.account?.name||val('manualAccountName')||'',chat_id:'',campaign:{name:val('campName')||'Campaign',objective:obj,budget_type:bt,currency:curr,bid_strategy:bid,daily_budget:bt==='CBO'&&bp==='Daily'&&bamt?Math.round(bamt*100):null,lifetime_budget:bt==='CBO'&&bp==='Lifetime'&&bamt?Math.round(bamt*100):null,status:'PAUSED'},ad_sets:adSets,ads};
 }
 async function sendToN8n(){
   const btn=q('createBtn');btn.disabled=true;btn.innerHTML='<span class="spin"></span> Sending...';
