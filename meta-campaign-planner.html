@@ -501,26 +501,7 @@ hr.dv{border:none;border-top:1px solid var(--bdr);margin:16px 0}
 </head>
 <body>
 <div class="app">
-<div class="overlay" id="connModal">
-  <div class="modal">
-    <h2>Connect to Meta Ads</h2>
-    <p class="modal-sub">Choose your connection — both are already authenticated via your Claude session. No API key needed.</p>
-    <div class="conn-opts">
-      <div class="conn-opt sel" id="opt-meta" onclick="selectConn('meta')">
-        <div class="ico">🔵</div><h3>Meta MCP</h3>
-        <p>Direct via Meta's official MCP connector</p>
-      </div>
-      <div class="conn-opt" id="opt-composio" onclick="selectConn('composio')">
-        <div class="ico">⚡</div><h3>Composio</h3>
-        <p>Via Composio — already connected to your Claude session</p>
-      </div>
-    </div>
-    <div class="modal-actions">
-      <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
-      <button class="btn btn-primary btn-sm" onclick="confirmConn()">Connect</button>
-    </div>
-  </div>
-</div>
+
 <div class="header">
   <div class="logo">f</div>
   <div class="header-text"><h1>Meta Campaign Planner</h1><p>Build and launch Meta ad campaigns step by step</p></div>
