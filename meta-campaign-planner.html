@@ -260,9 +260,9 @@ function getTags(id){return [...(q(id)?.querySelectorAll('.tag')||[])].map(t=>t.
 function makeTagInput(id,cls='tag-b'){const w=q(id);if(!w)return;let inp=w.querySelector('input');if(!inp){inp=document.createElement('input');inp.placeholder='Type and press Enter';w.appendChild(inp);}inp.onkeydown=e=>{if(e.key==='Enter'||e.key===','){e.preventDefault();const v=inp.value.trim();if(v){addTag(w,v,cls);inp.value='';}}if(e.key==='Backspace'&&!inp.value){const ts=w.querySelectorAll('.tag');if(ts.length)ts[ts.length-1].remove();}};w.onclick=()=>inp.focus();}
 
 function onManualAccount(){
-  const name=val('manualAccountName');
+  const name=val('manualAccountName').trim();
   const btn=q('step1Next');
-  if(name){APP.account={id:'',name};btn.disabled=false;}
+  if(name.length>0){APP.account={id:'',name};btn.disabled=false;}
   else btn.disabled=true;
 }
 
