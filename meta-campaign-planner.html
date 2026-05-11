@@ -14,26 +14,26 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .header-text h1{font-size:18px;font-weight:700;color:#fff;margin-bottom:3px}
 .header-text p{font-size:12px;color:var(--muted)}
 .header-right{margin-left:auto;display:flex;align-items:center;gap:10px}
-
-
-
-
+.conn-badge{display:flex;align-items:center;gap:6px;padding:6px 13px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid;cursor:pointer;transition:all .15s}
+.conn-badge.idle{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.25);color:var(--amber)}
+.conn-badge.ok{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.25);color:var(--green)}
+.conn-badge.err{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.25);color:var(--red)}
 .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .dot-green{background:var(--green);animation:pulse 2s infinite}
 .dot-amber{background:var(--amber)}
 .dot-red{background:var(--red)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-
-
-
-
-
-
-
-
-
-
-
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px)}
+.modal{background:var(--s2);border:1px solid var(--bdr);border-radius:16px;padding:28px;width:500px;max-width:94vw}
+.modal h2{font-size:16px;font-weight:700;color:#fff;margin-bottom:6px}
+.modal-sub{font-size:12px;color:var(--muted);margin-bottom:20px}
+.conn-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.conn-opt{padding:18px;border:1.5px solid var(--bdr);border-radius:10px;cursor:pointer;background:var(--s3);transition:all .2s;text-align:center}
+.conn-opt:hover,.conn-opt.sel{border-color:var(--blue);background:rgba(59,110,245,.1)}
+.conn-opt .ico{font-size:28px;margin-bottom:8px}
+.conn-opt h3{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px}
+.conn-opt p{font-size:11px;color:var(--muted);margin:0}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end}
 .hidden{display:none!important}
 .steps{display:flex;margin-bottom:24px;background:var(--s2);border-radius:12px;padding:5px;border:1px solid var(--bdr);gap:2px}
 .sbtn{flex:1;padding:10px 4px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-radius:8px;font-size:11px;font-weight:600;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:5px}
@@ -120,12 +120,14 @@ hr.dv{border:none;border-top:1px solid var(--bdr);margin:16px 0}
 </head>
 <body>
 <div class="app">
-
 <div class="header">
   <div class="logo">f</div>
   <div class="header-text"><h1>Meta Campaign Planner</h1><p>Build and launch Meta ad campaigns step by step</p></div>
   <div class="header-right">
-    
+    <div class="conn-badge idle" id="connBadge" onclick="openModal()">
+      <span class="dot dot-amber" id="connDot"></span>
+      <span id="connBadgeText">Click to connect</span>
+    </div>
   </div>
 </div>
 <div class="steps" id="stepsNav">
@@ -267,11 +269,17 @@ function pad(s,n=22){return String(s).padEnd(n,' ');}
 function addTag(wrap,txt,cls='tag-b'){if(!txt||!wrap)return;const inp=wrap.querySelector('input');const t=document.createElement('span');t.className='tag '+cls;t.innerHTML=txt+' <span class="tag-x" onclick="this.parentNode.remove()">x</span>';wrap.insertBefore(t,inp);}
 function getTags(id){return [...(q(id)?.querySelectorAll('.tag')||[])].map(t=>t.textContent.replace('x','').trim()).filter(Boolean);}
 function makeTagInput(id,cls='tag-b'){const w=q(id);if(!w)return;let inp=w.querySelector('input');if(!inp){inp=document.createElement('input');inp.placeholder='Type and press Enter';w.appendChild(inp);}inp.onkeydown=e=>{if(e.key==='Enter'||e.key===','){e.preventDefault();const v=inp.value.trim();if(v){addTag(w,v,cls);inp.value='';}}if(e.key==='Backspace'&&!inp.value){const ts=w.querySelectorAll('.tag');if(ts.length)ts[ts.length-1].remove();}};w.onclick=()=>inp.focus();}
-
-
-
-
-
+function openModal(){show('connModal');}
+function closeModal(){hide('connModal');}
+function selectConn(type){APP.connector=type;q('opt-meta').classList.toggle('sel',type==='meta');q('opt-composio').classList.toggle('sel',type==='composio');}
+function confirmConn(){closeModal();setBadge('connecting');loadAccounts();}
+function setBadge(state,label=''){const badge=q('connBadge'),dot=q('connDot'),txt=q('connBadgeText');badge.className='conn-badge '+(state==='ok'?'ok':state==='err'?'err':'idle');dot.className='dot '+(state==='ok'?'dot-green':state==='err'?'dot-red':'dot-amber');txt.textContent=label||(state==='ok'?'Connected':state==='err'?'Error':'Connecting...');}
+async function callClaude(messages,sys=''){
+  const mcpServers=APP.connector==='meta'?[{type:'url',url:'https://mcp.facebook.com/ads',name:'meta-ads'}]:[{type:'url',url:'https://connect.composio.dev/mcp',name:'composio'}];
+  const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys||'You are a helpful Meta Ads assistant.',messages,mcp_servers:mcpServers})});
+  if(!resp.ok)throw new Error('API '+resp.status);
+  return resp.json();
+}
 function parseJ(data){const txt=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');const tr=data.content.filter(b=>b.type==='mcp_tool_result');let raw=tr.length?(tr[tr.length-1].content?.[0]?.text||''):txt;if(!raw)raw=txt;const c=raw.replace(/```json|```/g,'').trim();const i=c.indexOf('{'),ai=c.indexOf('[');const s=i>=0&&(ai<0||i<ai)?i:ai>=0?ai:0;return JSON.parse(c.substring(s));}
 async function loadAccounts(){show('accountsLoading');hide('accountsList');q('barDot').className='dot dot-amber';q('barText').textContent='Connecting to Meta...';try{const data=await callClaude([{role:'user',content:'List all my Meta ad accounts. Return ONLY JSON: {"accounts":[{"id":"act_123","name":"My Account","currency":"USD","status":"ACTIVE"}]}'}]);const parsed=parseJ(data);const accounts=parsed.accounts||parsed.data||(Array.isArray(parsed)?parsed:[]);if(!accounts.length)throw new Error('No accounts found');const sel=q('selectedAccount');sel.innerHTML='<option value="">— Select account —</option>';accounts.forEach(a=>{const o=document.createElement('option');o.value=a.id||a.account_id;o.textContent=(a.name||a.account_name)+' ('+(a.id||a.account_id)+')';o.dataset.info=JSON.stringify(a);sel.appendChild(o);});hide('accountsLoading');show('accountsList');q('barDot').className='dot dot-green';q('barText').textContent='✓ '+accounts.length+' account(s) loaded';setBadge('ok',APP.connector==='meta'?'Meta MCP':'Composio');}catch(err){q('accountsLoading').innerHTML='<span style="color:var(--red)">⚠️ '+err.message+' — Check your connection and retry</span>';q('barDot').className='dot dot-red';q('barText').textContent='Connection failed';setBadge('err','Failed');}}
 async function onAccountSelected(){const sel=q('selectedAccount');const opt=sel.options[sel.selectedIndex];if(!opt.value){hide('accountDetails');q('step1Next').disabled=true;return;}APP.account={id:opt.value,name:opt.text};q('step1Next').disabled=false;show('accountDetails');q('accountStats').innerHTML='<div class="stat-c"><div class="stat-l">Account ID</div><div class="stat-v" style="font-size:11px">'+opt.value+'</div></div><div class="stat-c"><div class="stat-l">Status</div><div class="stat-v" style="color:var(--green);font-size:12px">✓ ACTIVE</div></div><div class="stat-c"><div class="stat-l">Loading</div><div class="stat-v"><div class="spinner-sm" style="margin:auto"></div></div></div><div class="stat-c"></div>';q('accountInfo').textContent='Loading pages, pixels, and catalogs...';await loadAssets(opt.value);}
@@ -386,26 +394,26 @@ body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(
 .header-text h1{font-size:18px;font-weight:700;color:#fff;margin-bottom:3px}
 .header-text p{font-size:12px;color:var(--muted)}
 .header-right{margin-left:auto;display:flex;align-items:center;gap:10px}
-
-
-
-
+.conn-badge{display:flex;align-items:center;gap:6px;padding:6px 13px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid;cursor:pointer;transition:all .15s}
+.conn-badge.idle{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.25);color:var(--amber)}
+.conn-badge.ok{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.25);color:var(--green)}
+.conn-badge.err{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.25);color:var(--red)}
 .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
 .dot-green{background:var(--green);animation:pulse 2s infinite}
 .dot-amber{background:var(--amber)}
 .dot-red{background:var(--red)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
-
-
-
-
-
-
-
-
-
-
-
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px)}
+.modal{background:var(--s2);border:1px solid var(--bdr);border-radius:16px;padding:28px;width:500px;max-width:94vw}
+.modal h2{font-size:16px;font-weight:700;color:#fff;margin-bottom:6px}
+.modal-sub{font-size:12px;color:var(--muted);margin-bottom:20px}
+.conn-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.conn-opt{padding:18px;border:1.5px solid var(--bdr);border-radius:10px;cursor:pointer;background:var(--s3);transition:all .2s;text-align:center}
+.conn-opt:hover,.conn-opt.sel{border-color:var(--blue);background:rgba(59,110,245,.1)}
+.conn-opt .ico{font-size:28px;margin-bottom:8px}
+.conn-opt h3{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px}
+.conn-opt p{font-size:11px;color:var(--muted);margin:0}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end}
 .hidden{display:none!important}
 .steps{display:flex;margin-bottom:24px;background:var(--s2);border-radius:12px;padding:5px;border:1px solid var(--bdr);gap:2px}
 .sbtn{flex:1;padding:10px 4px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-radius:8px;font-size:11px;font-weight:600;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:5px}
@@ -516,7 +524,10 @@ hr.dv{border:none;border-top:1px solid var(--bdr);margin:16px 0}
   <div class="logo">f</div>
   <div class="header-text"><h1>Meta Campaign Planner</h1><p>Build and launch Meta ad campaigns step by step</p></div>
   <div class="header-right">
-    
+    <div class="conn-badge idle" id="connBadge" onclick="openModal()">
+      <span class="dot dot-amber" id="connDot"></span>
+      <span id="connBadgeText">Click to connect</span>
+    </div>
   </div>
 </div>
 <div class="steps" id="stepsNav">
@@ -662,11 +673,17 @@ function pad(s,n=22){return String(s).padEnd(n,' ');}
 function addTag(wrap,txt,cls='tag-b'){if(!txt||!wrap)return;const inp=wrap.querySelector('input');const t=document.createElement('span');t.className='tag '+cls;t.innerHTML=txt+' <span class="tag-x" onclick="this.parentNode.remove()">x</span>';wrap.insertBefore(t,inp);}
 function getTags(id){return [...(q(id)?.querySelectorAll('.tag')||[])].map(t=>t.textContent.replace('x','').trim()).filter(Boolean);}
 function makeTagInput(id,cls='tag-b'){const w=q(id);if(!w)return;let inp=w.querySelector('input');if(!inp){inp=document.createElement('input');inp.placeholder='Type and press Enter';w.appendChild(inp);}inp.onkeydown=e=>{if(e.key==='Enter'||e.key===','){e.preventDefault();const v=inp.value.trim();if(v){addTag(w,v,cls);inp.value='';}}if(e.key==='Backspace'&&!inp.value){const ts=w.querySelectorAll('.tag');if(ts.length)ts[ts.length-1].remove();}};w.onclick=()=>inp.focus();}
-
-
-
-
-
+function openModal(){show('connModal');}
+function closeModal(){hide('connModal');}
+function selectConn(type){APP.connector=type;q('opt-meta').classList.toggle('sel',type==='meta');q('opt-composio').classList.toggle('sel',type==='composio');}
+function confirmConn(){closeModal();setBadge('connecting');loadAccounts();}
+function setBadge(state,label=''){const badge=q('connBadge'),dot=q('connDot'),txt=q('connBadgeText');badge.className='conn-badge '+(state==='ok'?'ok':state==='err'?'err':'idle');dot.className='dot '+(state==='ok'?'dot-green':state==='err'?'dot-red':'dot-amber');txt.textContent=label||(state==='ok'?'Connected':state==='err'?'Error':'Connecting...');}
+async function callClaude(messages,sys=''){
+  const mcpServers=APP.connector==='meta'?[{type:'url',url:'https://mcp.facebook.com/ads',name:'meta-ads'}]:[{type:'url',url:'https://connect.composio.dev/mcp',name:'composio'}];
+  const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys||'You are a helpful Meta Ads assistant.',messages,mcp_servers:mcpServers})});
+  if(!resp.ok)throw new Error('API '+resp.status);
+  return resp.json();
+}
 function parseJ(data){const txt=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');const tr=data.content.filter(b=>b.type==='mcp_tool_result');let raw=tr.length?(tr[tr.length-1].content?.[0]?.text||''):txt;if(!raw)raw=txt;const c=raw.replace(/```json|```/g,'').trim();const i=c.indexOf('{'),ai=c.indexOf('[');const s=i>=0&&(ai<0||i<ai)?i:ai>=0?ai:0;return JSON.parse(c.substring(s));}
 async function loadAccounts(){show('accountsLoading');hide('accountsList');q('barDot').className='dot dot-amber';q('barText').textContent='Connecting to Meta...';try{const data=await callClaude([{role:'user',content:'List all my Meta ad accounts. Return ONLY JSON: {"accounts":[{"id":"act_123","name":"My Account","currency":"USD","status":"ACTIVE"}]}'}]);const parsed=parseJ(data);const accounts=parsed.accounts||parsed.data||(Array.isArray(parsed)?parsed:[]);if(!accounts.length)throw new Error('No accounts found');const sel=q('selectedAccount');sel.innerHTML='<option value="">— Select account —</option>';accounts.forEach(a=>{const o=document.createElement('option');o.value=a.id||a.account_id;o.textContent=(a.name||a.account_name)+' ('+(a.id||a.account_id)+')';o.dataset.info=JSON.stringify(a);sel.appendChild(o);});hide('accountsLoading');show('accountsList');q('barDot').className='dot dot-green';q('barText').textContent='✓ '+accounts.length+' account(s) loaded';setBadge('ok',APP.connector==='meta'?'Meta MCP':'Composio');}catch(err){q('accountsLoading').innerHTML='<span style="color:var(--red)">⚠️ '+err.message+' — Check your connection and retry</span>';q('barDot').className='dot dot-red';q('barText').textContent='Connection failed';setBadge('err','Failed');}}
 async function onAccountSelected(){const sel=q('selectedAccount');const opt=sel.options[sel.selectedIndex];if(!opt.value){hide('accountDetails');q('step1Next').disabled=true;return;}APP.account={id:opt.value,name:opt.text};q('step1Next').disabled=false;show('accountDetails');q('accountStats').innerHTML='<div class="stat-c"><div class="stat-l">Account ID</div><div class="stat-v" style="font-size:11px">'+opt.value+'</div></div><div class="stat-c"><div class="stat-l">Status</div><div class="stat-v" style="color:var(--green);font-size:12px">✓ ACTIVE</div></div><div class="stat-c"><div class="stat-l">Loading</div><div class="stat-v"><div class="spinner-sm" style="margin:auto"></div></div></div><div class="stat-c"></div>';q('accountInfo').textContent='Loading pages, pixels, and catalogs...';await loadAssets(opt.value);}
@@ -717,7 +734,7 @@ async function createCampaign(){const btn=q('createBtn');btn.disabled=true;btn.i
 ');body.textContent=fullText||'Campaign submitted. Check Meta Ads Manager to verify.';q('outputHd').textContent='✅ Campaign creation complete';btn.innerHTML='✅ Created';btn.style.background='var(--green)';}catch(err){body.classList.remove('thinking');body.textContent='Error: '+err.message+'
 
 You can copy the brief above and paste it into Claude.ai.';q('outputHd').textContent='⚠️ Error occurred';btn.disabled=false;btn.innerHTML='🔄 Retry';}}
-initStep2();updateBidFields();
+initStep2();updateBidFields();openModal();
 </script>
 </body>
 </html>
