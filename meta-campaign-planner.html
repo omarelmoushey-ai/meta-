@@ -120,5 +120,1001 @@ hr.dv{border:none;border-top:1px solid var(--bdr);margin:16px 0}
 </head>
 <body>
 <div class="app">
+<div class="header">
+  <div class="logo">f</div>
+  <div class="header-text"><h1>Meta Campaign Planner</h1><p>Build and launch Meta ad campaigns step by step</p></div>
+  <div class="header-right">
+    <div class="conn-badge idle" id="connBadge" onclick="openModal()">
+      <span class="dot dot-amber" id="connDot"></span>
+      <span id="connBadgeText">Click to connect</span>
+    </div>
+  </div>
+</div>
+<div class="steps" id="stepsNav">
+  <button class="sbtn active" onclick="goStep(1)"><span class="snum">1</span>Account</button>
+  <button class="sbtn" onclick="goStep(2)"><span class="snum">2</span>Campaign</button>
+  <button class="sbtn" onclick="goStep(3)"><span class="snum">3</span>Ad Sets</button>
+  <button class="sbtn" onclick="goStep(4)"><span class="snum">4</span>Ads</button>
+  <button class="sbtn" onclick="goStep(5)"><span class="snum">5</span>Launch</button>
+</div>
+<div id="step1">
+  <div class="card">
+    <div class="card-hd"><span class="card-ico">🏢</span>Ad Account</div>
+    <div class="info">Enter your account name exactly as it appears in <strong>Meta Ads Manager</strong>. n8n will look up the Account ID automatically.</div>
+    <div class="field">
+      <label>Account Name</label>
+      <input type="text" id="manualAccountName" placeholder="e.g. My Business Account" oninput="onManualAccount()">
+    </div>
+  </div>
+  <div class="nav-row">
+    <span></span>
+    <button class="btn btn-primary" id="step1Next" onclick="goStep(2)" disabled>Next: Campaign Setup →</button>
+  </div>
+</div>
 
->
+<div id="step2" class="hidden">
+  <div class="card"><div class="card-hd"><span class="card-ico">📢</span>Campaign Settings</div>
+    <div class="field"><label>Campaign Name</label><input type="text" id="campName" placeholder="e.g. Summer Sale 2025"></div>
+    <div class="field"><label>Objective</label>
+      <div class="trow" id="objRow">
+        <button class="tbtn on" data-v="OUTCOME_SALES">SALES</button>
+        <button class="tbtn" data-v="OUTCOME_LEADS">LEADS</button>
+        <button class="tbtn" data-v="OUTCOME_TRAFFIC">TRAFFIC</button>
+        <button class="tbtn" data-v="OUTCOME_AWARENESS">AWARENESS</button>
+        <button class="tbtn" data-v="OUTCOME_ENGAGEMENT">ENGAGEMENT</button>
+        <button class="tbtn" data-v="OUTCOME_APP_PROMOTION">APP PROMO</button>
+      </div>
+    </div>
+    <div class="field"><label>Budget Type</label>
+      <div class="trow" id="budgetTypeRow">
+        <button class="tbtn on" data-v="CBO">CBO — Campaign Budget</button>
+        <button class="tbtn" data-v="ABO">ABO — Ad Set Budget</button>
+      </div>
+    </div>
+    <div id="cboFields">
+      <div class="row3">
+        <div class="field"><label>Currency</label>
+          <select id="campCurrency" onchange="onCurrencyChange()">
+            <option>USD</option><option>EGP</option><option>AED</option><option>SAR</option><option>EUR</option><option>GBP</option><option>KWD</option>
+          </select>
+        </div>
+        <div class="field"><label>Budget Period</label>
+          <div class="trow" id="budgetPeriodRow"><button class="tbtn on" data-v="Daily">Daily</button><button class="tbtn" data-v="Lifetime">Lifetime</button></div>
+        </div>
+        <div class="field"><label>Budget Amount</label>
+          <div class="input-pfx"><span class="pfx" id="budgCurrBadge">USD</span><input type="number" id="campBudget" placeholder="0.00" min="0" step="0.01"></div>
+        </div>
+      </div>
+    </div>
+    <div id="aboNote" class="info hidden">ℹ️ Budget will be set per Ad Set in the next step.</div>
+    <hr class="dv">
+    <div class="field"><label>Bid Strategy</label>
+      <select id="bidStrategy" onchange="updateBidFields()">
+        <option value="LOWEST_COST_WITHOUT_CAP">Lowest Cost (no cap)</option>
+        <option value="LOWEST_COST_WITH_BID_CAP">Bid Cap</option>
+        <option value="COST_CAP">Cost Cap</option>
+        <option value="MINIMUM_ROAS">Minimum ROAS</option>
+      </select>
+    </div>
+    <div id="bidAmountField" class="field hidden"><label>Bid / Cost Amount</label>
+      <div class="input-pfx"><span class="pfx" id="bidCurrBadge">USD</span><input type="number" id="bidAmount" placeholder="0.00" min="0" step="0.01"></div>
+    </div>
+    <div id="roasField" class="field hidden"><label>ROAS Target</label>
+      <div class="input-pfx"><span class="pfx">x</span><input type="number" id="roasVal" placeholder="2.5" min="0" step="0.1"></div>
+    </div>
+  </div>
+  <div class="nav-row"><button class="btn btn-ghost" onclick="goStep(1)">← Back</button><button class="btn btn-primary" onclick="goStep(3)">Next: Ad Sets →</button></div>
+</div>
+<div id="step3" class="hidden">
+  <div class="card"><div class="card-hd"><span class="card-ico">🎯</span>Number of Ad Sets</div>
+    <div class="counter-row">
+      <button class="cnt-btn" onclick="changeCount('adsets',-1)">−</button>
+      <span class="cnt-val" id="adsetsCount">1</span>
+      <button class="cnt-btn" onclick="changeCount('adsets',1)">+</button>
+      <span style="color:var(--muted);font-size:12px">1 — 8</span>
+    </div>
+  </div>
+  <div id="adSetsContainer"></div>
+  <div class="nav-row"><button class="btn btn-ghost" onclick="goStep(2)">← Back</button><button class="btn btn-primary" onclick="goStep(4)">Next: Ads →</button></div>
+</div>
+<div id="step4" class="hidden">
+  <div class="card"><div class="card-hd"><span class="card-ico">🖼</span>Ads per Ad Set</div>
+    <div class="counter-row">
+      <button class="cnt-btn" onclick="changeCount('ads',-1)">−</button>
+      <span class="cnt-val" id="adsCount">1</span>
+      <button class="cnt-btn" onclick="changeCount('ads',1)">+</button>
+      <span style="color:var(--muted);font-size:12px">1 — 8</span>
+    </div>
+  </div>
+  <div id="adsContainer"></div>
+  <div class="nav-row"><button class="btn btn-ghost" onclick="goStep(3)">← Back</button><button class="btn btn-primary" onclick="goStep(5)">Next: Review & Launch →</button></div>
+</div>
+<div id="step5" class="hidden">
+  <div class="card"><div class="card-hd"><span class="card-ico">📊</span>Campaign Summary</div>
+    <div class="stats-grid" id="summaryStats"></div>
+    <div class="tree-wrap" id="summaryTree"></div>
+  </div>
+  <div class="card"><div class="card-hd"><span class="card-ico">📋</span>Campaign Brief</div>
+    <div class="brief-box" id="briefBox"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+      <button class="btn btn-ghost btn-sm" onclick="copyBrief()">📋 Copy Brief</button>
+      <button class="btn btn-ghost btn-sm" onclick="openInClaude()">↗ Open in Claude.ai</button>
+    </div>
+  </div>
+  <div class="card"><div class="card-hd"><span class="card-ico">🚀</span>Send to n8n → Telegram Approval → Meta</div>
+    <div class="info">Claude will read the brief and create the full campaign in your Meta account in <strong>PAUSED</strong> status.</div>
+    <div id="connectorNote" class="warn hidden"></div>
+    <button class="btn btn-green" id="createBtn" onclick="createCampaign()" style="width:100%;justify-content:center;padding:14px;font-size:14px">🚀 Create Campaign in Meta</button>
+  </div>
+  <div id="outputPanel" class="output-panel hidden">
+    <div class="output-hd" id="outputHd">📤 Sending to n8n...</div>
+    <div class="output-body" id="outputBody"></div>
+  </div>
+  <div class="nav-row"><button class="btn btn-ghost" onclick="goStep(4)">← Back</button><span></span></div>
+</div>
+</div>
+<script>
+const APP={step:1,connector:'meta',account:null,accountData:{},adsetsCount:1,adsCount:1};
+const PERF_GOALS={OUTCOME_SALES:['Maximize Conversions','Maximize Conversion Value','Maximize Link Clicks','Maximize Landing Page Views','Maximize Reach'],OUTCOME_LEADS:['Maximize Leads','Maximize Conversions','Maximize Link Clicks','Maximize Reach'],OUTCOME_TRAFFIC:['Maximize Link Clicks','Maximize Landing Page Views','Maximize Reach','Maximize Impressions'],OUTCOME_AWARENESS:['Maximize Reach','Maximize Impressions','Maximize ThruPlay','Maximize 2-Second Views'],OUTCOME_ENGAGEMENT:['Maximize Post Engagement','Maximize ThruPlay','Maximize Reach'],OUTCOME_APP_PROMOTION:['Maximize App Installs','Maximize App Events','Maximize Link Clicks']};
+const CTAS=['Shop Now','Learn More','Sign Up','Book Now','Contact Us','Get Offer','Watch More','Send Message','Subscribe','Download','Get Quote','Apply Now'];
+const q=id=>document.getElementById(id);
+const val=id=>q(id)?q(id).value.trim():'';
+const show=id=>q(id)?.classList.remove('hidden');
+const hide=id=>q(id)?.classList.add('hidden');
+const swOn=id=>q(id)?.classList.contains('on');
+function getTV(id){return q(id)?.querySelector('.tbtn.on')?.dataset.v||'';}
+function makeToggle(id,cb){q(id)?.querySelectorAll('.tbtn').forEach(b=>{b.onclick=()=>{q(id).querySelectorAll('.tbtn').forEach(x=>x.classList.remove('on'));b.classList.add('on');cb?.();};});}
+function toggleSw(id){q(id)?.classList.toggle('on');}
+function pad(s,n=22){return String(s).padEnd(n,' ');}
+function addTag(wrap,txt,cls='tag-b'){if(!txt||!wrap)return;const inp=wrap.querySelector('input');const t=document.createElement('span');t.className='tag '+cls;t.innerHTML=txt+' <span class="tag-x" onclick="this.parentNode.remove()">x</span>';wrap.insertBefore(t,inp);}
+function getTags(id){return [...(q(id)?.querySelectorAll('.tag')||[])].map(t=>t.textContent.replace('x','').trim()).filter(Boolean);}
+function makeTagInput(id,cls='tag-b'){const w=q(id);if(!w)return;let inp=w.querySelector('input');if(!inp){inp=document.createElement('input');inp.placeholder='Type and press Enter';w.appendChild(inp);}inp.onkeydown=e=>{if(e.key==='Enter'||e.key===','){e.preventDefault();const v=inp.value.trim();if(v){addTag(w,v,cls);inp.value='';}}if(e.key==='Backspace'&&!inp.value){const ts=w.querySelectorAll('.tag');if(ts.length)ts[ts.length-1].remove();}};w.onclick=()=>inp.focus();}
+function openModal(){show('connModal');}
+function closeModal(){hide('connModal');}
+function selectConn(type){APP.connector=type;q('opt-meta').classList.toggle('sel',type==='meta');q('opt-composio').classList.toggle('sel',type==='composio');}
+function confirmConn(){closeModal();setBadge('connecting');loadAccounts();}
+function setBadge(state,label=''){const badge=q('connBadge'),dot=q('connDot'),txt=q('connBadgeText');badge.className='conn-badge '+(state==='ok'?'ok':state==='err'?'err':'idle');dot.className='dot '+(state==='ok'?'dot-green':state==='err'?'dot-red':'dot-amber');txt.textContent=label||(state==='ok'?'Connected':state==='err'?'Error':'Connecting...');}
+async function callClaude(messages,sys=''){
+  const mcpServers=APP.connector==='meta'?[{type:'url',url:'https://mcp.facebook.com/ads',name:'meta-ads'}]:[{type:'url',url:'https://connect.composio.dev/mcp',name:'composio'}];
+  const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys||'You are a helpful Meta Ads assistant.',messages,mcp_servers:mcpServers})});
+  if(!resp.ok)throw new Error('API '+resp.status);
+  return resp.json();
+}
+function parseJ(data){const txt=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');const tr=data.content.filter(b=>b.type==='mcp_tool_result');let raw=tr.length?(tr[tr.length-1].content?.[0]?.text||''):txt;if(!raw)raw=txt;const c=raw.replace(/```json|```/g,'').trim();const i=c.indexOf('{'),ai=c.indexOf('[');const s=i>=0&&(ai<0||i<ai)?i:ai>=0?ai:0;return JSON.parse(c.substring(s));}
+async function loadAccounts(){show('accountsLoading');hide('accountsList');q('barDot').className='dot dot-amber';q('barText').textContent='Connecting to Meta...';try{const data=await callClaude([{role:'user',content:'List all my Meta ad accounts. Return ONLY JSON: {"accounts":[{"id":"act_123","name":"My Account","currency":"USD","status":"ACTIVE"}]}'}]);const parsed=parseJ(data);const accounts=parsed.accounts||parsed.data||(Array.isArray(parsed)?parsed:[]);if(!accounts.length)throw new Error('No accounts found');const sel=q('selectedAccount');sel.innerHTML='<option value="">— Select account —</option>';accounts.forEach(a=>{const o=document.createElement('option');o.value=a.id||a.account_id;o.textContent=(a.name||a.account_name)+' ('+(a.id||a.account_id)+')';o.dataset.info=JSON.stringify(a);sel.appendChild(o);});hide('accountsLoading');show('accountsList');q('barDot').className='dot dot-green';q('barText').textContent='✓ '+accounts.length+' account(s) loaded';setBadge('ok',APP.connector==='meta'?'Meta MCP':'Composio');}catch(err){q('accountsLoading').innerHTML='<span style="color:var(--red)">⚠️ '+err.message+' — Check your connection and retry</span>';q('barDot').className='dot dot-red';q('barText').textContent='Connection failed';setBadge('err','Failed');}}
+async function onAccountSelected(){const sel=q('selectedAccount');const opt=sel.options[sel.selectedIndex];if(!opt.value){hide('accountDetails');q('step1Next').disabled=true;return;}APP.account={id:opt.value,name:opt.text};q('step1Next').disabled=false;show('accountDetails');q('accountStats').innerHTML='<div class="stat-c"><div class="stat-l">Account ID</div><div class="stat-v" style="font-size:11px">'+opt.value+'</div></div><div class="stat-c"><div class="stat-l">Status</div><div class="stat-v" style="color:var(--green);font-size:12px">✓ ACTIVE</div></div><div class="stat-c"><div class="stat-l">Loading</div><div class="stat-v"><div class="spinner-sm" style="margin:auto"></div></div></div><div class="stat-c"></div>';q('accountInfo').textContent='Loading pages, pixels, and catalogs...';await loadAssets(opt.value);}
+async function loadAssets(accountId){try{const data=await callClaude([{role:'user',content:'For Meta ad account '+accountId+', get: Facebook Pages (id, name), Instagram accounts (id, username), Pixels (id, name), Catalogs (id, name). Return ONLY JSON: {"pages":[{"id":"123","name":"My Page"}],"instagram_accounts":[{"id":"456","username":"@page"}],"pixels":[{"id":"789","name":"My Pixel"}],"catalogs":[]}'}]);const p=parseJ(data);APP.accountData=p;q('accountStats').innerHTML='<div class="stat-c"><div class="stat-l">Pages</div><div class="stat-v">'+(p.pages||[]).length+'</div></div><div class="stat-c"><div class="stat-l">Instagram</div><div class="stat-v">'+(p.instagram_accounts||[]).length+'</div></div><div class="stat-c"><div class="stat-l">Pixels</div><div class="stat-v">'+(p.pixels||[]).length+'</div></div><div class="stat-c"><div class="stat-l">Catalogs</div><div class="stat-v">'+(p.catalogs||[]).length+'</div></div>';q('accountInfo').textContent='✓ Account assets loaded. Proceed to campaign setup.';if(p.currency){const c=q('campCurrency');[...c.options].forEach(o=>{if(o.value===p.currency)o.selected=true;});onCurrencyChange();}}catch(e){APP.accountData={pages:[],instagram_accounts:[],pixels:[{id:'default',name:'Account Default Pixel'}],catalogs:[]};q('accountInfo').textContent='⚠️ Partial data loaded — defaults will be used.';}}
+function initStep2(){makeToggle('objRow');makeToggle('budgetTypeRow',()=>{const bt=getTV('budgetTypeRow');bt==='CBO'?(show('cboFields'),hide('aboNote')):(hide('cboFields'),show('aboNote'));});makeToggle('budgetPeriodRow');}
+function updateBidFields(){const bs=val('bidStrategy');if(['LOWEST_COST_WITH_BID_CAP','COST_CAP'].includes(bs)){show('bidAmountField');hide('roasField');}else if(bs==='MINIMUM_ROAS'){hide('bidAmountField');show('roasField');}else{hide('bidAmountField');hide('roasField');}}
+function onCurrencyChange(){const c=val('campCurrency')||'USD';q('budgCurrBadge').textContent=c;q('bidCurrBadge').textContent=c;}
+function buildAdSetHTML(i){const obj=getTV('objRow')||'OUTCOME_SALES';const goals=PERF_GOALS[obj]||PERF_GOALS.OUTCOME_SALES;const isABO=getTV('budgetTypeRow')==='ABO';const curr=val('campCurrency')||'USD';const pixels=APP.accountData.pixels||[];const pixelOpts='<option value="account_default">Account Default Pixel</option>'+pixels.map(p=>'<option value="'+p.id+'">'+( p.name||p.id)+'</option>').join('')+'<option value="custom">Enter manually...</option>';return '<div class="acc" id="as-acc-'+i+'"><div class="acc-hd" onclick="toggleAcc('as-body-'+i+'','as-arr-'+i+'')"><span><span class="paused-pill">PAUSED</span>Ad Set '+(i+1)+': <span id="as-lbl-'+i+'">Ad Set '+(i+1)+'</span></span><span id="as-arr-'+i+'">'+(i===0?'▲':'▼')+'</span></div><div class="acc-body '+(i===0?'open':'')+'" id="as-body-'+i+'"><div class="field"><label>Ad Set Name</label><input type="text" id="as-name-'+i+'" placeholder="Ad Set '+(i+1)+'" oninput="q('as-lbl-'+i+'').textContent=this.value||'Ad Set '+(i+1)+''"></div><hr class="dv"><div class="sec-ttl">Conversion Setup</div><div class="row2"><div class="field"><label>Conversion Location</label><select id="as-loc-'+i+'" onchange="updateConvFields('+i+')"><option>Website</option><option>App</option><option>Messenger</option><option>WhatsApp</option><option>Instagram</option><option>Calls</option><option>Lead Form</option></select></div><div class="field"><label>Performance Goal</label><select id="as-goal-'+i+'">'+goals.map(g=>'<option>'+g+'</option>').join('')+'</select></div></div><div id="as-pixel-section-'+i+'"><div class="row2"><div class="field"><label>Dataset / Pixel</label><select id="as-pixel-sel-'+i+'" onchange="toggleCustomPixel('+i+')">'+pixelOpts+'</select></div><div class="field" id="as-pixel-custom-wrap-'+i+'" style="display:none"><label>Pixel ID (manual)</label><input type="text" id="as-pixel-custom-'+i+'" placeholder="123456789"></div><div class="field"><label>Conversion Event</label><select id="as-convevent-'+i+'"><option>Purchase</option><option>Add To Cart</option><option>Initiate Checkout</option><option>Lead</option><option>Complete Registration</option><option>View Content</option><option>Search</option><option>Subscribe</option><option>Contact</option></select></div></div></div><div class="row2"><div class="field"><label>Cost Per Result Goal (optional)</label><div class="input-pfx"><span class="pfx">'+curr+'</span><input type="number" id="as-cprg-'+i+'" placeholder="0.00" min="0" step="0.01"></div></div><div class="field"><label>Attribution Window</label><select id="as-attrib-'+i+'"><option>7-day click + 1-day view</option><option>1-day click</option><option>7-day click</option><option>1-day click + 1-day view</option></select></div></div>'+(isABO?'<hr class="dv"><div class="sec-ttl">Budget (ABO)</div><div class="row2"><div class="field"><label>Budget Period</label><div class="trow" id="as-budp-'+i+'"><button class="tbtn on" data-v="Daily">Daily</button><button class="tbtn" data-v="Lifetime">Lifetime</button></div></div><div class="field"><label>Budget Amount</label><div class="input-pfx"><span class="pfx">'+curr+'</span><input type="number" id="as-budget-'+i+'" placeholder="0.00" min="0" step="0.01"></div></div></div>':'')+'<hr class="dv"><div class="sec-ttl">Schedule</div><div class="row3"><div class="field"><label>Start Date</label><input type="date" id="as-sd-'+i+'"></div><div class="field"><label>Start Time</label><input type="time" id="as-st-'+i+'"></div><div class="field"><label>End Date (optional)</label><input type="date" id="as-ed-'+i+'"></div></div><hr class="dv"><div class="sec-ttl">Audience</div><div class="field"><label>Locations</label><input type="text" id="as-audloc-'+i+'" placeholder="United States, United Kingdom..."></div><div class="row3"><div class="field"><label>Age Min</label><select id="as-agemin-'+i+'">'+Array.from({length:53},(_,k)=>k+13).map(a=>'<option '+(a===18?'selected':'')+'>'+a+'</option>').join('')+'</select></div><div class="field"><label>Age Max</label><select id="as-agemax-'+i+'">'+Array.from({length:47},(_,k)=>k+19).map(a=>'<option '+(a===65?'selected':'')+'>'+a+'</option>').join('')+'<option>65+</option></select></div><div class="field"><label>Gender</label><select id="as-gender-'+i+'"><option>All</option><option>Male</option><option>Female</option></select></div></div><div class="field"><label>Languages</label><div class="trow" style="margin-bottom:7px"><button class="tbtn" onclick="addTag(q('as-langs-'+i+''),'English','tag-b')">English</button><button class="tbtn" onclick="addTag(q('as-langs-'+i+''),'Arabic','tag-b')">Arabic</button></div><div class="tag-wrap" id="as-langs-'+i+'"><input type="text" id="as-lang-inp-'+i+'" placeholder="Type language + Enter" onkeydown="if(event.key==='Enter'){addTag(q('as-langs-'+i+''),this.value,'tag-b');this.value='';}"></div></div><div class="field"><label>Detailed Targeting</label><div class="tag-wrap" id="as-detail-'+i+'"></div></div><div class="field"><label>Custom Audiences</label><div class="tag-wrap" id="as-custom-'+i+'"></div></div><div class="field"><label>Exclude Audiences</label><div class="tag-wrap" id="as-excl-'+i+'"></div></div><div class="swr"><span>Advantage+ Audience</span><div class="sw" id="as-aplus-'+i+'" onclick="toggleSw('as-aplus-'+i+'')"></div></div><hr class="dv"><div class="sec-ttl">Placements</div><div class="swr"><span>Advantage+ Placements</span><div class="sw on" id="as-advpl-'+i+'" onclick="toggleSw('as-advpl-'+i+'');updatePlacement('+i+')"></div></div><div id="as-manual-'+i+'" class="hidden"><div class="cb-row" id="as-platforms-'+i+'"><label class="cb-item"><input type="checkbox" value="Facebook"> Facebook</label><label class="cb-item"><input type="checkbox" value="Instagram"> Instagram</label><label class="cb-item"><input type="checkbox" value="Messenger"> Messenger</label><label class="cb-item"><input type="checkbox" value="Audience Network"> Audience Network</label><label class="cb-item"><input type="checkbox" value="WhatsApp"> WhatsApp</label></div></div><div class="swr"><span>Exclude Skippable In-Stream Ads</span><div class="sw" id="as-skip-'+i+'" onclick="toggleSw('as-skip-'+i+'')"></div></div></div></div>';}
+function toggleAcc(bodyId,arrId){const b=q(bodyId);if(!b)return;const open=b.classList.toggle('open');const a=q(arrId);if(a)a.textContent=open?'▲':'▼';}
+function toggleCustomPixel(i){const s=q('as-pixel-sel-'+i),w=q('as-pixel-custom-wrap-'+i);if(s&&w)w.style.display=s.value==='custom'?'block':'none';}
+function updateConvFields(i){const loc=q('as-loc-'+i)?.value||'Website';const s=q('as-pixel-section-'+i);if(s)s.style.display=['Website','App','Lead Form'].includes(loc)?'block':'none';}
+function updatePlacement(i){q('as-manual-'+i)?.classList.toggle('hidden',swOn('as-advpl-'+i));}
+function rebuildAdSets(){const cont=q('adSetsContainer');cont.innerHTML='';for(let i=0;i<APP.adsetsCount;i++)cont.insertAdjacentHTML('beforeend',buildAdSetHTML(i));for(let i=0;i<APP.adsetsCount;i++){makeTagInput('as-detail-'+i);makeTagInput('as-custom-'+i);makeTagInput('as-excl-'+i,'tag-r');if(q('as-budp-'+i))makeToggle('as-budp-'+i);updateConvFields(i);}}
+function buildAdHTML(asi,ai){const pages=APP.accountData.pages||[];const igs=APP.accountData.instagram_accounts||[];const cats=APP.accountData.catalogs||[];const pageOpts='<option value="account_default">Account Default Page</option>'+pages.map(p=>'<option value="'+p.id+'">'+(p.name||p.id)+'</option>').join('');const igOpts='<option value="account_default">Account Default Instagram</option>'+igs.map(p=>'<option value="'+p.id+'">'+(p.username||p.id)+'</option>').join('');const catOpts='<option value="">— None —</option>'+cats.map(c=>'<option value="'+c.id+'">'+(c.name||c.id)+'</option>').join('');const curr=val('campCurrency')||'USD';return '<div class="acc" id="ad-acc-'+asi+'-'+ai+'"><div class="acc-hd" onclick="toggleAcc('ad-body-'+asi+'-'+ai+'','ad-arr-'+asi+'-'+ai+'')"><span><span class="paused-pill">PAUSED</span>Ad '+(ai+1)+': <span id="ad-lbl-'+asi+'-'+ai+'">Ad '+(ai+1)+'</span></span><span id="ad-arr-'+asi+'-'+ai+'">'+(ai===0?'▲':'▼')+'</span></div><div class="acc-body '+(ai===0?'open':'')+'" id="ad-body-'+asi+'-'+ai+'"><div class="field"><label>Ad Name</label><input type="text" id="ad-name-'+asi+'-'+ai+'" placeholder="Ad '+(ai+1)+'" oninput="q('ad-lbl-'+asi+'-'+ai+'').textContent=this.value||'Ad '+(ai+1)+''"></div><hr class="dv"><div class="sec-ttl">Identity</div><div class="row2"><div class="field"><label>Facebook Page</label><select id="ad-page-'+asi+'-'+ai+'">'+pageOpts+'</select></div><div class="field"><label>Instagram Profile</label><select id="ad-ig-'+asi+'-'+ai+'">'+igOpts+'</select></div></div><hr class="dv"><div class="sec-ttl">Creation Type</div><div class="trow" id="ad-crtype-'+asi+'-'+ai+'"><button class="tbtn on" data-v="create">Create New Ad</button><button class="tbtn" data-v="existing">Use Existing Post</button></div><div id="ad-existing-'+asi+'-'+ai+'" class="field hidden" style="margin-top:10px"><label>Post ID / URL</label><input type="text" id="ad-postid-'+asi+'-'+ai+'" placeholder="https://..."></div><div id="ad-new-'+asi+'-'+ai+'"><hr class="dv"><div class="row2"><div class="field"><label>Ad Format</label><select id="ad-fmt-'+asi+'-'+ai+'" onchange="updateAdFormat('+asi+','+ai+')"><option>Single Image / Video</option><option>Carousel</option><option>Catalog Carousel</option><option>Collection</option><option>Story / Reel</option></select></div><div class="field"><label>Schedule Date (optional)</label><input type="date" id="ad-sd-'+asi+'-'+ai+'"></div></div><hr class="dv"><div class="sec-ttl">Destination</div><div class="row2"><div class="field"><label>Website URL</label><input type="text" id="ad-url-'+asi+'-'+ai+'" placeholder="https://..." oninput="updateUTM('+asi+','+ai+')"></div><div class="field"><label>Display URL (optional)</label><input type="text" id="ad-durl-'+asi+'-'+ai+'" placeholder="example.com"></div></div><div id="ad-catalog-section-'+asi+'-'+ai+'" class="hidden"><hr class="dv"><div class="sec-ttl">Catalog</div><div class="row2"><div class="field"><label>Catalog</label><select id="ad-catalog-'+asi+'-'+ai+'">'+catOpts+'</select></div><div class="field"><label>Product Set</label><select id="ad-prodset-'+asi+'-'+ai+'"><option value="all">All Products</option></select></div></div></div><hr class="dv"><div class="swr"><span>Advantage+ Creative</span><div class="sw on" id="ad-advcr-'+asi+'-'+ai+'" onclick="toggleSw('ad-advcr-'+asi+'-'+ai+'')"></div></div><hr class="dv"><div class="sec-ttl">Creative Content</div><div id="ad-creative-'+asi+'-'+ai+'"></div><hr class="dv"><div class="field"><label>Call to Action</label><select id="ad-cta-'+asi+'-'+ai+'">'+CTAS.map(c=>'<option>'+c+'</option>').join('')+'</select></div><hr class="dv"><div class="sec-ttl">Tracking & UTM</div><div class="swr"><span>Enable Tracking / UTM</span><div class="sw on" id="ad-trk-'+asi+'-'+ai+'" onclick="toggleSw('ad-trk-'+asi+'-'+ai+'');toggleUTM('+asi+','+ai+')"></div></div><div id="ad-utm-wrap-'+asi+'-'+ai+'"><div class="row2"><div class="field"><label>UTM Source</label><select id="ad-utm-src-'+asi+'-'+ai+'" onchange="updateUTM('+asi+','+ai+')"><option value="{{site_source_name}}">Dynamic</option><option value="facebook">facebook</option><option value="instagram">instagram</option><option value="messenger">messenger</option></select></div><div class="field"><label>UTM Medium</label><select id="ad-utm-med-'+asi+'-'+ai+'" onchange="updateUTM('+asi+','+ai+')"><option value="paid_social">paid_social</option><option value="cpc">cpc</option><option value="social">social</option></select></div></div><div class="row2"><div class="field"><label>UTM Campaign</label><input type="text" id="ad-utm-camp-'+asi+'-'+ai+'" value="{{campaign.id}}" oninput="updateUTM('+asi+','+ai+')"></div><div class="field"><label>UTM Content</label><input type="text" id="ad-utm-cont-'+asi+'-'+ai+'" value="{{ad.id}}" oninput="updateUTM('+asi+','+ai+')"></div></div><div class="field"><label>UTM Preview</label><div class="utm-preview" id="ad-utm-prev-'+asi+'-'+ai+'">Enter a destination URL above to preview</div></div></div></div></div></div>';}
+function updateAdFormat(asi,ai){const fmt=q('ad-fmt-'+asi+'-'+ai)?.value||'';q('ad-catalog-section-'+asi+'-'+ai)?.classList.toggle('hidden',!['Catalog Carousel','Collection'].includes(fmt));const cr=q('ad-creative-'+asi+'-'+ai);if(!cr)return;if(fmt==='Carousel'){cr.innerHTML='<div class="field"><label>Primary Text</label><textarea id="ad-pt-'+asi+'-'+ai+'" placeholder="Up to 125 chars recommended"></textarea></div>'+[0,1,2].map(ci=>'<div style="background:var(--s3);border:1px solid var(--bdr);border-radius:8px;padding:12px;margin-bottom:8px"><div class="sec-ttl">Card '+(ci+1)+'</div><div class="row2"><div class="field"><label>Media URL</label><input type="text" id="ad-c'+ci+'-m-'+asi+'-'+ai+'"></div><div class="field"><label>Card URL</label><input type="text" id="ad-c'+ci+'-u-'+asi+'-'+ai+'"></div></div><div class="row2"><div class="field"><label>Headline</label><input type="text" id="ad-c'+ci+'-h-'+asi+'-'+ai+'"></div><div class="field"><label>Description</label><input type="text" id="ad-c'+ci+'-d-'+asi+'-'+ai+'"></div></div></div>').join('');}else{cr.innerHTML='<div class="field"><label>Media URL</label><input type="text" id="ad-media-'+asi+'-'+ai+'" placeholder="https://..."></div><div class="field"><label>Primary Text</label><textarea id="ad-pt-'+asi+'-'+ai+'" placeholder="Up to 125 chars" oninput="let c=q('ad-pt-cc-'+asi+'-'+ai+'');if(c)c.textContent=this.value.length+' / 125'"></textarea><div class="char-hint" id="ad-pt-cc-'+asi+'-'+ai+'">0 / 125</div></div><div class="row2"><div class="field"><label>Headline (max 40)</label><input type="text" id="ad-hl-'+asi+'-'+ai+'" maxlength="40" oninput="let c=q('ad-hl-cc-'+asi+'-'+ai+'');if(c)c.textContent=this.value.length+' / 40'"><div class="char-hint" id="ad-hl-cc-'+asi+'-'+ai+'">0 / 40</div></div><div class="field"><label>Description (max 30)</label><input type="text" id="ad-desc-'+asi+'-'+ai+'" maxlength="30" oninput="let c=q('ad-desc-cc-'+asi+'-'+ai+'');if(c)c.textContent=this.value.length+' / 30'"><div class="char-hint" id="ad-desc-cc-'+asi+'-'+ai+'">0 / 30</div></div></div>';}}
+function toggleUTM(asi,ai){q('ad-utm-wrap-'+asi+'-'+ai)?.classList.toggle('hidden',!swOn('ad-trk-'+asi+'-'+ai));}
+function updateUTM(asi,ai){const base=q('ad-url-'+asi+'-'+ai)?.value.trim()||'';const prev=q('ad-utm-prev-'+asi+'-'+ai);if(!prev)return;if(!base){prev.textContent='Enter a destination URL above to preview';return;}const src=q('ad-utm-src-'+asi+'-'+ai)?.value||'';const med=q('ad-utm-med-'+asi+'-'+ai)?.value||'';const camp=q('ad-utm-camp-'+asi+'-'+ai)?.value||'';const cont=q('ad-utm-cont-'+asi+'-'+ai)?.value||'';prev.textContent=base+(base.includes('?')?'&':'?')+'utm_source='+src+'&utm_medium='+med+'&utm_campaign='+camp+'&utm_content='+cont;}
+function rebuildAds(){const cont=q('adsContainer');cont.innerHTML='';for(let i=0;i<APP.adsetsCount;i++){const asName=q('as-name-'+i)?.value||'Ad Set '+(i+1);cont.insertAdjacentHTML('beforeend','<div style="background:var(--s3);border:1px solid var(--bdr);border-radius:8px;padding:10px 14px;margin-bottom:8px;font-weight:700;font-size:13px;color:#fff">📦 '+asName+'</div>');for(let j=0;j<APP.adsCount;j++)cont.insertAdjacentHTML('beforeend',buildAdHTML(i,j));}for(let i=0;i<APP.adsetsCount;i++)for(let j=0;j<APP.adsCount;j++){makeToggle('ad-crtype-'+i+'-'+j,()=>{const v=getTV('ad-crtype-'+i+'-'+j);q('ad-existing-'+i+'-'+j)?.classList.toggle('hidden',v!=='existing');q('ad-new-'+i+'-'+j)?.classList.toggle('hidden',v==='existing');});updateAdFormat(i,j);}}
+function goStep(n){if(n===3)rebuildAdSets();if(n===4)rebuildAds();if(n===5)buildSummary();[1,2,3,4,5].forEach(i=>q('step'+i)?.classList.toggle('hidden',i!==n));APP.step=n;q('stepsNav').querySelectorAll('.sbtn').forEach((b,i)=>{b.classList.toggle('active',i+1===n);b.classList.toggle('done',i+1<n);});window.scrollTo({top:0,behavior:'smooth'});}
+function changeCount(type,d){if(type==='adsets'){APP.adsetsCount=Math.max(1,Math.min(8,APP.adsetsCount+d));q('adsetsCount').textContent=APP.adsetsCount;rebuildAdSets();}else{APP.adsCount=Math.max(1,Math.min(8,APP.adsCount+d));q('adsCount').textContent=APP.adsCount;rebuildAds();}}
+function getAsData(i){const ps=q('as-pixel-sel-'+i)?.value||'account_default';return {name:val('as-name-'+i)||'Ad Set '+(i+1),convLoc:q('as-loc-'+i)?.value||'',perfGoal:q('as-goal-'+i)?.value||'',pixel:ps==='custom'?val('as-pixel-custom-'+i):ps==='account_default'?'Account Default':ps,convEvent:q('as-convevent-'+i)?.value||'',cprg:val('as-cprg-'+i),attrib:q('as-attrib-'+i)?.value||'',budPeriod:getTV('as-budp-'+i)||'Daily',budget:val('as-budget-'+i),sd:val('as-sd-'+i),st:val('as-st-'+i),ed:val('as-ed-'+i),loc:val('as-audloc-'+i),ageMin:q('as-agemin-'+i)?.value||'18',ageMax:q('as-agemax-'+i)?.value||'65',gender:q('as-gender-'+i)?.value||'All',langs:getTags('as-langs-'+i).join(', '),detail:getTags('as-detail-'+i).join(', '),custom:getTags('as-custom-'+i).join(', '),excl:getTags('as-excl-'+i).join(', '),aplusAud:swOn('as-aplus-'+i)?'ON':'OFF',placement:swOn('as-advpl-'+i)?'Advantage+':'Manual',platforms:[...(q('as-platforms-'+i)?.querySelectorAll('input:checked')||[])].map(c=>c.value).join(', '),skip:swOn('as-skip-'+i)?'YES':'NO'};}
+function getAdData(asi,ai){const fmt=q('ad-fmt-'+asi+'-'+ai)?.value||'Single Image / Video';const crType=getTV('ad-crtype-'+asi+'-'+ai)||'create';const trackOn=swOn('ad-trk-'+asi+'-'+ai);let utmUrl='';if(trackOn){const base=val('ad-url-'+asi+'-'+ai);if(base){const src=q('ad-utm-src-'+asi+'-'+ai)?.value||'';const med=q('ad-utm-med-'+asi+'-'+ai)?.value||'';const camp=q('ad-utm-camp-'+asi+'-'+ai)?.value||'';const cont=q('ad-utm-cont-'+asi+'-'+ai)?.value||'';utmUrl=base+(base.includes('?')?'&':'?')+'utm_source='+src+'&utm_medium='+med+'&utm_campaign='+camp+'&utm_content='+cont;}}let creative='';if(crType==='create'){if(fmt==='Carousel'){creative='Primary Text: '+val('ad-pt-'+asi+'-'+ai)+'
+Cards:
+'+[0,1,2].map(ci=>'  Card '+(ci+1)+': '+val('ad-c'+ci+'-h-'+asi+'-'+ai)+' | '+val('ad-c'+ci+'-d-'+asi+'-'+ai)+' | '+val('ad-c'+ci+'-u-'+asi+'-'+ai)).join('
+');}else{creative='Media: '+val('ad-media-'+asi+'-'+ai)+'
+Primary Text: '+val('ad-pt-'+asi+'-'+ai)+'
+Headline: '+val('ad-hl-'+asi+'-'+ai)+'
+Description: '+val('ad-desc-'+asi+'-'+ai);}}return {name:val('ad-name-'+asi+'-'+ai)||'Ad '+(ai+1),page:q('ad-page-'+asi+'-'+ai)?.options[q('ad-page-'+asi+'-'+ai)?.selectedIndex]?.text||'Account Default Page',ig:q('ad-ig-'+asi+'-'+ai)?.options[q('ad-ig-'+asi+'-'+ai)?.selectedIndex]?.text||'Account Default Instagram',crType,postId:val('ad-postid-'+asi+'-'+ai),fmt,sd:val('ad-sd-'+asi+'-'+ai),url:val('ad-url-'+asi+'-'+ai),durl:val('ad-durl-'+asi+'-'+ai),catalog:q('ad-catalog-'+asi+'-'+ai)?.options[q('ad-catalog-'+asi+'-'+ai)?.selectedIndex]?.text||'',advCr:swOn('ad-advcr-'+asi+'-'+ai)?'ON':'OFF',creative,cta:q('ad-cta-'+asi+'-'+ai)?.value||'',tracking:trackOn?'ON':'OFF',utmUrl};}
+function buildBrief(){const cn=val('campName')||'Campaign';const obj=getTV('objRow')||'OUTCOME_SALES';const bt=getTV('budgetTypeRow')||'CBO';const curr=val('campCurrency')||'USD';const bp=getTV('budgetPeriodRow')||'Daily';const bamt=val('campBudget');const bid=val('bidStrategy')||'LOWEST_COST_WITHOUT_CAP';const accId=APP.account?.id||'unknown';const accName=APP.account?.name||'unknown';let L=[];L.push('You have access to Meta Ads MCP. Create the following campaign EXACTLY as specified.');L.push('All items MUST be created in PAUSED status.
+');L.push('=== AD ACCOUNT ===');L.push(pad('Account ID')+' : '+accId);L.push(pad('Account Name')+' : '+accName+'
+');L.push('=== CAMPAIGN ===');L.push(pad('Name')+' : '+cn);L.push(pad('Objective')+' : '+obj);L.push(pad('Budget Type')+' : '+bt);if(bt==='CBO'){L.push(pad('Currency')+' : '+curr);L.push(pad('Budget Period')+' : '+bp);L.push(pad('Budget')+' : '+(bamt||'—'));}L.push(pad('Bid Strategy')+' : '+bid);if(['LOWEST_COST_WITH_BID_CAP','COST_CAP'].includes(bid))L.push(pad('Bid/Cost Amount')+' : '+(val('bidAmount')||'—')+' '+curr);if(bid==='MINIMUM_ROAS')L.push(pad('ROAS Target')+' : x'+(val('roasVal')||'—'));L.push(pad('Status')+' : PAUSED
+');L.push('=== AD SETS ('+APP.adsetsCount+') ===');for(let i=0;i<APP.adsetsCount;i++){const d=getAsData(i);L.push('
+[AD SET '+(i+1)+'] '+d.name);L.push(pad('Conversion Location')+' : '+d.convLoc);L.push(pad('Performance Goal')+' : '+d.perfGoal);L.push(pad('Dataset/Pixel')+' : '+d.pixel);if(d.convEvent)L.push(pad('Conversion Event')+' : '+d.convEvent);if(d.cprg)L.push(pad('Cost Per Result Goal')+' : '+d.cprg+' '+curr);L.push(pad('Attribution')+' : '+d.attrib);if(bt==='ABO')L.push(pad('Budget')+' : '+(d.budget||'—')+' '+curr+' / '+d.budPeriod);L.push(pad('Start')+' : '+(d.sd||'ASAP')+' '+(d.st||''));if(d.ed)L.push(pad('End')+' : '+d.ed);L.push(pad('Locations')+' : '+(d.loc||'—'));L.push(pad('Age Range')+' : '+d.ageMin+' - '+d.ageMax);L.push(pad('Gender')+' : '+d.gender);if(d.langs)L.push(pad('Languages')+' : '+d.langs);if(d.detail)L.push(pad('Detailed Targeting')+' : '+d.detail+'
+  NOTE: Use closest available match. Skip if unavailable.');if(d.custom)L.push(pad('Custom Audiences')+' : '+d.custom+'
+  NOTE: Check if exist. If yes attach, if no CREATE them first.');if(d.excl)L.push(pad('Exclude Audiences')+' : '+d.excl);L.push(pad('Advantage+ Audience')+' : '+d.aplusAud);L.push(pad('Placement')+' : '+d.placement);if(d.placement==='Manual'&&d.platforms)L.push(pad('Platforms')+' : '+d.platforms);L.push(pad('Exclude Skippable')+' : '+d.skip);}L.push('
+=== ADS ===');for(let i=0;i<APP.adsetsCount;i++){const asN=q('as-name-'+i)?.value||'Ad Set '+(i+1);L.push('
+[AD SET '+(i+1)+' - '+asN+']');for(let j=0;j<APP.adsCount;j++){const d=getAdData(i,j);L.push('
+  [AD '+(j+1)+'] '+d.name);L.push('  '+pad('Facebook Page')+' : '+d.page);L.push('  '+pad('Instagram')+' : '+d.ig);L.push('  '+pad('Creation Type')+' : '+d.crType);if(d.crType==='existing'){L.push('  '+pad('Post ID/URL')+' : '+(d.postId||'—'));}else{L.push('  '+pad('Format')+' : '+d.fmt);if(d.sd)L.push('  '+pad('Schedule')+' : '+d.sd);L.push('  '+pad('Destination URL')+' : '+(d.url||'—'));if(d.durl)L.push('  '+pad('Display URL')+' : '+d.durl);if(d.catalog)L.push('  '+pad('Catalog')+' : '+d.catalog);L.push('  '+pad('Advantage+ Creative')+' : '+d.advCr);d.creative.split('
+').forEach(l=>L.push('  '+l));L.push('  '+pad('CTA')+' : '+d.cta);L.push('  '+pad('Tracking')+' : '+d.tracking);if(d.utmUrl)L.push('  '+pad('UTM URL')+' : '+d.utmUrl);}}}L.push('
+=== EXECUTION INSTRUCTIONS ===');L.push('1. Create campaign in PAUSED status.');L.push('2. Per ad set: use account default pixel if marked Account Default. Create custom audiences if not found.');L.push('3. Per ad: use account default page/IG if marked Account Default.');L.push('4. Confirm all items are PAUSED after creation.');L.push('5. Report: campaign ID, all ad set IDs, all ad IDs, and any substitutions or errors.');return L.join('
+');}
+function buildSummary(){const bt=getTV('budgetTypeRow')||'CBO';const curr=val('campCurrency')||'USD';const bamt=val('campBudget');const obj=getTV('objRow')||'OUTCOME_SALES';const bid=val('bidStrategy')||'';const cn=val('campName')||'Campaign';q('summaryStats').innerHTML='<div class="stat-c"><div class="stat-l">Objective</div><div class="stat-v" style="font-size:12px">'+obj.replace('OUTCOME_','')+'</div></div><div class="stat-c"><div class="stat-l">Budget Type</div><div class="stat-v" style="font-size:12px">'+bt+'</div></div><div class="stat-c"><div class="stat-l">Budget</div><div class="stat-v" style="font-size:12px">'+(bt==='CBO'?(bamt||'—')+' '+curr:'Per Ad Set')+'</div></div><div class="stat-c"><div class="stat-l">Ad Sets / Ads</div><div class="stat-v" style="font-size:12px">'+APP.adsetsCount+' / '+APP.adsCount+'</div></div>';let tree='<div class="tree-camp">📢 '+cn+' <span style="font-size:11px;color:var(--muted);font-weight:400">'+obj.replace('OUTCOME_','')+'</span></div>';for(let i=0;i<APP.adsetsCount;i++){tree+='<div class="tree-adset"><div class="tree-adset-name">🎯 '+(q('as-name-'+i)?.value||'Ad Set '+(i+1))+'</div>';for(let j=0;j<APP.adsCount;j++)tree+='<div class="tree-ad">🖼 '+(q('ad-name-'+i+'-'+j)?.value||'Ad '+(j+1))+'</div>';tree+='</div>';}q('summaryTree').innerHTML=tree;q('briefBox').textContent=buildBrief();if(APP.connector==='composio'){show('connectorNote');q('connectorNote').textContent='Using Composio connector — routing through Composio Meta integration.';}else hide('connectorNote');}
+function copyBrief(){navigator.clipboard.writeText(q('briefBox').textContent).then(()=>{const b=event.target;const o=b.textContent;b.textContent='✅ Copied!';setTimeout(()=>b.textContent=o,2000);});}
+function openInClaude(){window.open('https://claude.ai/new?q='+encodeURIComponent(q('briefBox').textContent),'_blank');}
+function buildJSON(){
+  const bt=getTV('budgetTypeRow')||'CBO';const curr=val('campCurrency')||'USD';
+  const bp=getTV('budgetPeriodRow')||'Daily';const bamt=parseFloat(val('campBudget')||'0');
+  const bid=val('bidStrategy')||'LOWEST_COST_WITHOUT_CAP';const obj=getTV('objRow')||'OUTCOME_SALES';
+  const adSets=[];
+  for(let i=0;i<APP.adsetsCount;i++){
+    const ps=q('as-pixel-sel-'+i)?.value||'account_default';
+    const pixelId=ps==='custom'?val('as-pixel-custom-'+i):ps==='account_default'?'Account Default':ps;
+    const loc=val('as-audloc-'+i);
+    const targeting={age_min:parseInt(q('as-agemin-'+i)?.value||'18'),age_max:parseInt(q('as-agemax-'+i)?.value||'65')};
+    if(loc)targeting.geo_locations={countries:loc.split(',').map(s=>s.trim()).filter(Boolean)};
+    const gender=q('as-gender-'+i)?.value||'All';
+    if(gender==='Male')targeting.genders=[1];if(gender==='Female')targeting.genders=[2];
+    const langs=getTags('as-langs-'+i);const detail=getTags('as-detail-'+i);
+    const custom=getTags('as-custom-'+i);const excl=getTags('as-excl-'+i);
+    if(langs.length)targeting.locales=langs;
+    if(detail.length)targeting.flexible_spec=[{interests:detail.map(d=>({name:d}))}];
+    const asBudget=parseFloat(val('as-budget-'+i)||'0');
+    adSets.push({name:val('as-name-'+i)||'Ad Set '+(i+1),optimization_goal:q('as-goal-'+i)?.value||'OFFSITE_CONVERSIONS',billing_event:'IMPRESSIONS',targeting,pixel_id:pixelId,conversion_event:q('as-convevent-'+i)?.value||'PURCHASE',attribution_spec:q('as-attrib-'+i)?.value||'7-day click + 1-day view',start_time:val('as-sd-'+i)||null,end_time:val('as-ed-'+i)||null,advantage_plus_audience:swOn('as-aplus-'+i),placement:swOn('as-advpl-'+i)?'Advantage+':'Manual',daily_budget:bt==='ABO'&&asBudget?Math.round(asBudget*100):null,custom_audiences:custom,excluded_audiences:excl,status:'PAUSED'});
+  }
+  const ads=[];
+  for(let i=0;i<APP.adsetsCount;i++){
+    for(let j=0;j<APP.adsCount;j++){
+      const fmt=q('ad-fmt-'+i+'-'+j)?.value||'Single Image / Video';
+      const crType=getTV('ad-crtype-'+i+'-'+j)||'create';const trackOn=swOn('ad-trk-'+i+'-'+j);
+      let utmUrl='';
+      if(trackOn){const base=val('ad-url-'+i+'-'+j);if(base){const src=q('ad-utm-src-'+i+'-'+j)?.value||'';const med=q('ad-utm-med-'+i+'-'+j)?.value||'';const camp=q('ad-utm-camp-'+i+'-'+j)?.value||'';const cont=q('ad-utm-cont-'+i+'-'+j)?.value||'';utmUrl=base+(base.includes('?')?'&':'?')+'utm_source='+src+'&utm_medium='+med+'&utm_campaign='+camp+'&utm_content='+cont;}}
+      ads.push({name:val('ad-name-'+i+'-'+j)||'Ad '+(j+1),ad_set_index:i,page_id:q('ad-page-'+i+'-'+j)?.value||'account_default',instagram_id:q('ad-ig-'+i+'-'+j)?.value||'account_default',creation_type:crType,existing_post_id:crType==='existing'?val('ad-postid-'+i+'-'+j):null,format:fmt,advantage_plus_creative:swOn('ad-advcr-'+i+'-'+j),creative:{title:val('ad-hl-'+i+'-'+j)||'',body:val('ad-pt-'+i+'-'+j)||'',image_url:val('ad-media-'+i+'-'+j)||'',link_url:utmUrl||val('ad-url-'+i+'-'+j)||'',display_url:val('ad-durl-'+i+'-'+j)||'',call_to_action:(q('ad-cta-'+i+'-'+j)?.value||'LEARN_MORE').toUpperCase().replace(/ /g,'_'),description:val('ad-desc-'+i+'-'+j)||''},status:'PAUSED'});
+    }
+  }
+  return {account_name:APP.account?.name||val('manualAccountName')||'',chat_id:'',campaign:{name:val('campName')||'Campaign',objective:obj,budget_type:bt,currency:curr,bid_strategy:bid,daily_budget:bt==='CBO'&&bp==='Daily'&&bamt?Math.round(bamt*100):null,lifetime_budget:bt==='CBO'&&bp==='Lifetime'&&bamt?Math.round(bamt*100):null,status:'PAUSED'},ad_sets:adSets,ads};
+}
+async function sendToN8n(){
+  const btn=q('createBtn');btn.disabled=true;btn.innerHTML='<span class="spin"></span> Sending...';
+  show('outputPanel');q('outputHd').textContent='📤 Sending campaign to n8n...';
+  const body=q('outputBody');body.textContent='';
+  try{
+    const resp=await fetch('https://moshi-md.app.n8n.cloud/webhook/meta-campaign',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(buildJSON())});
+    if(!resp.ok)throw new Error('Webhook returned '+resp.status);
+    q('outputHd').textContent='✅ Sent successfully!';
+    body.textContent='Campaign sent to n8n.
+
+Check Telegram — you will receive an approval message shortly.
+
+✅ Approve → campaign created in Meta (PAUSED)
+❌ Decline → cancelled, nothing created';
+    btn.innerHTML='✅ Sent';btn.style.background='var(--green)';
+  }catch(err){
+    q('outputHd').textContent='⚠️ Send failed';
+    body.textContent='Error: '+err.message+'
+
+Make sure the n8n workflow is active.';
+    btn.disabled=false;btn.innerHTML='🔄 Retry';
+  }
+}!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meta Campaign Planner</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0b0e18;--s1:#111520;--s2:#161b2e;--s3:#1d2440;--s4:#242d50;--bdr:#2c3558;--bdr2:#3d4a75;--text:#d8dff5;--muted:#6e7da6;--dim:#3f4d78;--blue:#3b6ef5;--blue-d:#2a55d4;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;--purple:#a78bfa}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+.app{max-width:940px;margin:0 auto;padding:24px 16px 100px}
+.header{display:flex;align-items:center;gap:16px;margin-bottom:28px;padding:20px 24px;background:var(--s2);border:1px solid var(--bdr);border-radius:14px}
+.logo{width:44px;height:44px;background:var(--blue);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;flex-shrink:0}
+.header-text h1{font-size:18px;font-weight:700;color:#fff;margin-bottom:3px}
+.header-text p{font-size:12px;color:var(--muted)}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.conn-badge{display:flex;align-items:center;gap:6px;padding:6px 13px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid;cursor:pointer;transition:all .15s}
+.conn-badge.idle{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.25);color:var(--amber)}
+.conn-badge.ok{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.25);color:var(--green)}
+.conn-badge.err{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.25);color:var(--red)}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot-green{background:var(--green);animation:pulse 2s infinite}
+.dot-amber{background:var(--amber)}
+.dot-red{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px)}
+.modal{background:var(--s2);border:1px solid var(--bdr);border-radius:16px;padding:28px;width:500px;max-width:94vw}
+.modal h2{font-size:16px;font-weight:700;color:#fff;margin-bottom:6px}
+.modal-sub{font-size:12px;color:var(--muted);margin-bottom:20px}
+.conn-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.conn-opt{padding:18px;border:1.5px solid var(--bdr);border-radius:10px;cursor:pointer;background:var(--s3);transition:all .2s;text-align:center}
+.conn-opt:hover,.conn-opt.sel{border-color:var(--blue);background:rgba(59,110,245,.1)}
+.conn-opt .ico{font-size:28px;margin-bottom:8px}
+.conn-opt h3{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px}
+.conn-opt p{font-size:11px;color:var(--muted);margin:0}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end}
+.hidden{display:none!important}
+.steps{display:flex;margin-bottom:24px;background:var(--s2);border-radius:12px;padding:5px;border:1px solid var(--bdr);gap:2px}
+.sbtn{flex:1;padding:10px 4px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-radius:8px;font-size:11px;font-weight:600;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:5px}
+.snum{width:22px;height:22px;border-radius:50%;background:var(--s4);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;transition:all .2s}
+.sbtn.active{background:var(--s3);color:#fff}.sbtn.active .snum{background:var(--blue);color:#fff}
+.sbtn.done{color:var(--green)}.sbtn.done .snum{background:var(--green);color:#fff}
+.card{background:var(--s2);border:1px solid var(--bdr);border-radius:14px;padding:22px;margin-bottom:12px}
+.card-hd{font-size:14px;font-weight:700;margin-bottom:18px;color:#fff;display:flex;align-items:center;gap:10px}
+.card-ico{width:30px;height:30px;border-radius:8px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.field{margin-bottom:14px}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600}
+input[type=text],input[type=number],input[type=date],input[type=time],select,textarea{width:100%;background:var(--s3);border:1px solid var(--bdr);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;transition:border .15s;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);background:var(--s4)}
+select option{background:#161b2e}
+textarea{resize:vertical;min-height:72px;line-height:1.5}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.input-pfx{display:flex;align-items:stretch}
+.input-pfx .pfx{padding:0 11px;background:var(--s4);border:1px solid var(--bdr);border-radius:8px 0 0 8px;font-size:12px;color:var(--muted);display:flex;align-items:center;white-space:nowrap;border-right:none}
+.input-pfx input{border-radius:0 8px 8px 0}
+.char-hint{font-size:11px;color:var(--dim);margin-top:3px}
+.trow{display:flex;gap:6px;flex-wrap:wrap}
+.tbtn{padding:7px 14px;border:1px solid var(--bdr);border-radius:20px;background:transparent;color:var(--muted);cursor:pointer;font-size:12px;font-weight:600;transition:all .15s}
+.tbtn.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.tbtn:hover:not(.on){border-color:var(--bdr2);color:var(--text)}
+.swr{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:var(--s3);border-radius:8px;border:1px solid var(--bdr);margin-bottom:9px}
+.sw{width:38px;height:21px;background:var(--s4);border-radius:11px;cursor:pointer;position:relative;transition:background .15s;border:1px solid var(--bdr);flex-shrink:0}
+.sw.on{background:var(--blue);border-color:var(--blue)}
+.sw::after{content:'';position:absolute;top:2px;right:2px;width:15px;height:15px;background:#fff;border-radius:50%;transition:transform .15s}
+.sw.on::after{transform:translateX(-17px)}
+.tag-wrap{background:var(--s3);border:1px solid var(--bdr);border-radius:8px;padding:6px 8px;display:flex;flex-wrap:wrap;gap:5px;min-height:38px;cursor:text;transition:border .15s}
+.tag-wrap:focus-within{border-color:var(--blue)}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:5px;font-size:11px;font-weight:600}
+.tag-b{background:rgba(59,110,245,.15);color:#7ab4f5}.tag-r{background:rgba(239,68,68,.1);color:#fca5a5}
+.tag input{border:none!important;background:transparent!important;outline:none;color:var(--text);font-size:12px;min-width:80px;padding:2px;width:auto}
+.tag-x{cursor:pointer;opacity:.5;font-size:10px}.tag-x:hover{opacity:1}
+.acc{background:var(--s2);border:1px solid var(--bdr);border-radius:10px;margin-bottom:8px;overflow:hidden}
+.acc-hd{padding:13px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-weight:600;font-size:13px;color:#fff;background:var(--s3);user-select:none}
+.acc-hd:hover{background:var(--s4)}
+.acc-body{padding:18px;display:none;border-top:1px solid var(--bdr)}.acc-body.open{display:block}
+.paused-pill{font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(245,158,11,.12);color:var(--amber);font-weight:700;margin-right:8px}
+.info{background:rgba(59,110,245,.07);border:1px solid rgba(59,110,245,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:#7ab4f5;margin-bottom:12px;line-height:1.6}
+.warn{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:#fcd34d;margin-bottom:12px}
+.note{font-size:11px;color:var(--dim);margin-top:3px;font-style:italic}
+.btn{padding:9px 22px;border-radius:9px;border:none;cursor:pointer;font-size:13px;font-weight:700;transition:all .15s;display:inline-flex;align-items:center;gap:7px}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover:not(:disabled){background:var(--blue-d)}
+.btn-ghost{background:var(--s4);color:var(--text);border:1px solid var(--bdr)}.btn-ghost:hover{background:var(--s3)}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover:not(:disabled){background:#16a34a}
+.btn-sm{padding:6px 13px;font-size:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:22px;gap:10px}
+.counter-row{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.cnt-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--bdr);background:var(--s4);color:#fff;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;font-weight:700;transition:all .15s}
+.cnt-btn:hover{background:var(--blue);border-color:var(--blue)}
+.cnt-val{font-size:17px;font-weight:700;color:#fff;min-width:28px;text-align:center}
+hr.dv{border:none;border-top:1px solid var(--bdr);margin:16px 0}
+.sec-ttl{font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.stat-c{background:var(--s3);border:1px solid var(--bdr);border-radius:9px;padding:13px;text-align:center}
+.stat-l{font-size:11px;color:var(--muted);margin-bottom:4px}.stat-v{font-size:14px;font-weight:700;color:#fff}
+.tree-wrap{background:var(--s3);border:1px solid var(--bdr);border-radius:9px;padding:15px;margin-bottom:12px}
+.tree-camp{font-weight:700;color:#fff;font-size:13px;margin-bottom:10px}
+.tree-adset{padding:6px 0 6px 16px;border-left:2px solid var(--blue);margin-bottom:6px}
+.tree-adset-name{font-size:12px;color:#7ab4f5;font-weight:600;margin-bottom:4px}
+.tree-ad{font-size:11px;color:var(--muted);padding:2px 12px}
+.brief-box{background:var(--s3);border:1px solid var(--bdr);border-radius:8px;padding:14px;font-size:11.5px;color:var(--text);font-family:'Courier New',monospace;white-space:pre-wrap;word-break:break-word;max-height:300px;overflow-y:auto;margin-bottom:12px;line-height:1.7}
+.utm-preview{background:var(--s4);border:1px solid var(--bdr);border-radius:6px;padding:8px 11px;font-size:11px;color:#7ab4f5;word-break:break-all;font-family:monospace;margin-top:6px;line-height:1.5}
+.loading-cell{display:flex;align-items:center;gap:9px;padding:10px;color:var(--muted);font-size:12px}
+.spinner-sm{width:15px;height:15px;border:2px solid var(--bdr);border-top-color:var(--blue);border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
+.conn-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--s3);border:1px solid var(--bdr);border-radius:10px;margin-bottom:14px}
+.conn-bar-left{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600}
+.output-panel{background:linear-gradient(135deg,rgba(59,110,245,.05),rgba(167,139,250,.05));border:1px solid rgba(167,139,250,.25);border-radius:12px;padding:18px;margin-top:12px}
+.output-hd{display:flex;align-items:center;gap:9px;font-weight:700;font-size:13px;color:#c4b5fd;margin-bottom:12px}
+.output-body{font-size:13px;color:var(--text);line-height:1.75;white-space:pre-wrap}
+@keyframes dots{0%{content:'.'}33%{content:'..'}66%{content:'...'}}
+.thinking::after{content:'...';animation:dots 1.2s infinite}
+.cb-row{display:flex;flex-wrap:wrap;gap:7px}
+.cb-item{display:flex;align-items:center;gap:5px;cursor:pointer;padding:5px 11px;border:1px solid var(--bdr);border-radius:6px;font-size:12px;color:var(--muted);transition:all .15s;background:var(--s3)}
+.cb-item input{width:14px;height:14px;accent-color:var(--blue)}
+.cb-item:has(input:checked){border-color:var(--blue);color:var(--text);background:rgba(59,110,245,.08)}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="header">
+  <div class="logo">f</div>
+  <div class="header-text"><h1>Meta Campaign Planner</h1><p>Build and launch Meta ad campaigns step by step</p></div>
+  <div class="header-right">
+    <div class="conn-badge idle" id="connBadge" onclick="openModal()">
+      <span class="dot dot-amber" id="connDot"></span>
+      <span id="connBadgeText">Click to connect</span>
+    </div>
+  </div>
+</div>
+<div class="steps" id="stepsNav">
+  <button class="sbtn active" onclick="goStep(1)"><span class="snum">1</span>Account</button>
+  <button class="sbtn" onclick="goStep(2)"><span class="snum">2</span>Campaign</button>
+  <button class="sbtn" onclick="goStep(3)"><span class="snum">3</span>Ad Sets</button>
+  <button class="sbtn" onclick="goStep(4)"><span class="snum">4</span>Ads</button>
+  <button class="sbtn" onclick="goStep(5)"><span class="snum">5</span>Launch</button>
+</div>
+<div id="step1">
+  <div class="card">
+    <div class="card-hd"><span class="card-ico">🏢</span>Ad Account</div>
+    <div class="info">Enter your account name exactly as it appears in <strong>Meta Ads Manager</strong>. n8n will look up the Account ID automatically.</div>
+    <div class="field">
+      <label>Account Name</label>
+      <input type="text" id="manualAccountName" placeholder="e.g. My Business Account" oninput="onManualAccount()">
+    </div>
+  </div>
+  <div class="nav-row">
+    <span></span>
+    <button class="btn btn-primary" id="step1Next" onclick="goStep(2)" disabled>Next: Campaign Setup →</button>
+  </div>
+</div>
+
+<div id="step2" class="hidden">
+  <div class="card"><div class="card-hd"><span class="card-ico">📢</span>Campaign Settings</div>
+    <div class="field"><label>Campaign Name</label><input type="text" id="campName" placeholder="e.g. Summer Sale 2025"></div>
+    <div class="field"><label>Objective</label>
+      <div class="trow" id="objRow">
+        <button class="tbtn on" data-v="OUTCOME_SALES">SALES</button>
+        <button class="tbtn" data-v="OUTCOME_LEADS">LEADS</button>
+        <button class="tbtn" data-v="OUTCOME_TRAFFIC">TRAFFIC</button>
+        <button class="tbtn" data-v="OUTCOME_AWARENESS">AWARENESS</button>
+        <button class="tbtn" data-v="OUTCOME_ENGAGEMENT">ENGAGEMENT</button>
+        <button class="tbtn" data-v="OUTCOME_APP_PROMOTION">APP PROMO</button>
+      </div>
+    </div>
+    <div class="field"><label>Budget Type</label>
+      <div class="trow" id="budgetTypeRow">
+        <button class="tbtn on" data-v="CBO">CBO — Campaign Budget</button>
+        <button class="tbtn" data-v="ABO">ABO — Ad Set Budget</button>
+      </div>
+    </div>
+    <div id="cboFields">
+      <div class="row3">
+        <div class="field"><label>Currency</label>
+          <select id="campCurrency" onchange="onCurrencyChange()">
+            <option>USD</option><option>EGP</option><option>AED</option><option>SAR</option><option>EUR</option><option>GBP</option><option>KWD</option>
+          </select>
+        </div>
+        <div class="field"><label>Budget Period</label>
+          <div class="trow" id="budgetPeriodRow"><button class="tbtn on" data-v="Daily">Daily</button><button class="tbtn" data-v="Lifetime">Lifetime</button></div>
+        </div>
+        <div class="field"><label>Budget Amount</label>
+          <div class="input-pfx"><span class="pfx" id="budgCurrBadge">USD</span><input type="number" id="campBudget" placeholder="0.00" min="0" step="0.01"></div>
+        </div>
+      </div>
+    </div>
+    <div id="aboNote" class="info hidden">ℹ️ Budget will be set per Ad Set in the next step.</div>
+    <hr class="dv">
+    <div class="field"><label>Bid Strategy</label>
+      <select id="bidStrategy" onchange="updateBidFields()">
+        <option value="LOWEST_COST_WITHOUT_CAP">Lowest Cost (no cap)</option>
+        <option value="LOWEST_COST_WITH_BID_CAP">Bid Cap</option>
+        <option value="COST_CAP">Cost Cap</option>
+        <option value="MINIMUM_ROAS">Minimum ROAS</option>
+      </select>
+    </div>
+    <div id="bidAmountField" class="field hidden"><label>Bid / Cost Amount</label>
+      <div class="input-pfx"><span class="pfx" id="bidCurrBadge">USD</span><input type="number" id="bidAmount" placeholder="0.00" min="0" step="0.01"></div>
+    </div>
+    <div id="roasField" class="field hidden"><label>ROAS Target</label>
+      <div class="input-pfx"><span class="pfx">x</span><input type="number" id="roasVal" placeholder="2.5" min="0" step="0.1"></div>
+    </div>
+  </div>
+  <div class="nav-row"><button class="btn btn-ghost" onclick="goStep(1)">← Back</button><button class="btn btn-primary" onclick="goStep(3)">Next: Ad Sets →</button></div>
+</div>
+<div id="step3" class="hidden">
+  <div class="card"><div class="card-hd"><span class="card-ico">🎯</span>Number of Ad Sets</div>
+    <div class="counter-row">
+      <button class="cnt-btn" onclick="changeCount('adsets',-1)">−</button>
+      <span class="cnt-val" id="adsetsCount">1</span>
+      <button class="cnt-btn" onclick="changeCount('adsets',1)">+</button>
+      <span style="color:var(--muted);font-size:12px">1 — 8</span>
+    </div>
+  </div>
+  <div id="adSetsContainer"></div>
+  <div class="nav-row"><button class="btn btn-ghost" onclick="goStep(2)">← Back</button><button class="btn btn-primary" onclick="goStep(4)">Next: Ads →</button></div>
+</div>
+<div id="step4" class="hidden">
+  <div class="card"><div class="card-hd"><span class="card-ico">🖼</span>Ads per Ad Set</div>
+    <div class="counter-row">
+      <button class="cnt-btn" onclick="changeCount('ads',-1)">−</button>
+      <span class="cnt-val" id="adsCount">1</span>
+      <button class="cnt-btn" onclick="changeCount('ads',1)">+</button>
+      <span style="color:var(--muted);font-size:12px">1 — 8</span>
+    </div>
+  </div>
+  <div id="adsContainer"></div>
+  <div class="nav-row"><button class="btn btn-ghost" onclick="goStep(3)">← Back</button><button class="btn btn-primary" onclick="goStep(5)">Next: Review & Launch →</button></div>
+</div>
+<div id="step5" class="hidden">
+  <div class="card"><div class="card-hd"><span class="card-ico">📊</span>Campaign Summary</div>
+    <div class="stats-grid" id="summaryStats"></div>
+    <div class="tree-wrap" id="summaryTree"></div>
+  </div>
+  <div class="card"><div class="card-hd"><span class="card-ico">📋</span>Campaign Brief</div>
+    <div class="brief-box" id="briefBox"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+      <button class="btn btn-ghost btn-sm" onclick="copyBrief()">📋 Copy Brief</button>
+      <button class="btn btn-ghost btn-sm" onclick="openInClaude()">↗ Open in Claude.ai</button>
+    </div>
+  </div>
+  <div class="card"><div class="card-hd"><span class="card-ico">🚀</span>Send to n8n → Telegram Approval → Meta</div>
+    <div class="info">Claude will read the brief and create the full campaign in your Meta account in <strong>PAUSED</strong> status.</div>
+    <div id="connectorNote" class="warn hidden"></div>
+    <button class="btn btn-green" id="createBtn" onclick="createCampaign()" style="width:100%;justify-content:center;padding:14px;font-size:14px">🚀 Create Campaign in Meta</button>
+  </div>
+  <div id="outputPanel" class="output-panel hidden">
+    <div class="output-hd" id="outputHd">📤 Sending to n8n...</div>
+    <div class="output-body" id="outputBody"></div>
+  </div>
+  <div class="nav-row"><button class="btn btn-ghost" onclick="goStep(4)">← Back</button><span></span></div>
+</div>
+</div>
+<script>
+const APP={step:1,connector:'meta',account:null,accountData:{},adsetsCount:1,adsCount:1};
+const PERF_GOALS={OUTCOME_SALES:['Maximize Conversions','Maximize Conversion Value','Maximize Link Clicks','Maximize Landing Page Views','Maximize Reach'],OUTCOME_LEADS:['Maximize Leads','Maximize Conversions','Maximize Link Clicks','Maximize Reach'],OUTCOME_TRAFFIC:['Maximize Link Clicks','Maximize Landing Page Views','Maximize Reach','Maximize Impressions'],OUTCOME_AWARENESS:['Maximize Reach','Maximize Impressions','Maximize ThruPlay','Maximize 2-Second Views'],OUTCOME_ENGAGEMENT:['Maximize Post Engagement','Maximize ThruPlay','Maximize Reach'],OUTCOME_APP_PROMOTION:['Maximize App Installs','Maximize App Events','Maximize Link Clicks']};
+const CTAS=['Shop Now','Learn More','Sign Up','Book Now','Contact Us','Get Offer','Watch More','Send Message','Subscribe','Download','Get Quote','Apply Now'];
+const q=id=>document.getElementById(id);
+const val=id=>q(id)?q(id).value.trim():'';
+const show=id=>q(id)?.classList.remove('hidden');
+const hide=id=>q(id)?.classList.add('hidden');
+const swOn=id=>q(id)?.classList.contains('on');
+function getTV(id){return q(id)?.querySelector('.tbtn.on')?.dataset.v||'';}
+function makeToggle(id,cb){q(id)?.querySelectorAll('.tbtn').forEach(b=>{b.onclick=()=>{q(id).querySelectorAll('.tbtn').forEach(x=>x.classList.remove('on'));b.classList.add('on');cb?.();};});}
+function toggleSw(id){q(id)?.classList.toggle('on');}
+function pad(s,n=22){return String(s).padEnd(n,' ');}
+function addTag(wrap,txt,cls='tag-b'){if(!txt||!wrap)return;const inp=wrap.querySelector('input');const t=document.createElement('span');t.className='tag '+cls;t.innerHTML=txt+' <span class="tag-x" onclick="this.parentNode.remove()">x</span>';wrap.insertBefore(t,inp);}
+function getTags(id){return [...(q(id)?.querySelectorAll('.tag')||[])].map(t=>t.textContent.replace('x','').trim()).filter(Boolean);}
+function makeTagInput(id,cls='tag-b'){const w=q(id);if(!w)return;let inp=w.querySelector('input');if(!inp){inp=document.createElement('input');inp.placeholder='Type and press Enter';w.appendChild(inp);}inp.onkeydown=e=>{if(e.key==='Enter'||e.key===','){e.preventDefault();const v=inp.value.trim();if(v){addTag(w,v,cls);inp.value='';}}if(e.key==='Backspace'&&!inp.value){const ts=w.querySelectorAll('.tag');if(ts.length)ts[ts.length-1].remove();}};w.onclick=()=>inp.focus();}
+function openModal(){show('connModal');}
+function closeModal(){hide('connModal');}
+function selectConn(type){APP.connector=type;q('opt-meta').classList.toggle('sel',type==='meta');q('opt-composio').classList.toggle('sel',type==='composio');}
+function confirmConn(){closeModal();setBadge('connecting');loadAccounts();}
+function setBadge(state,label=''){const badge=q('connBadge'),dot=q('connDot'),txt=q('connBadgeText');badge.className='conn-badge '+(state==='ok'?'ok':state==='err'?'err':'idle');dot.className='dot '+(state==='ok'?'dot-green':state==='err'?'dot-red':'dot-amber');txt.textContent=label||(state==='ok'?'Connected':state==='err'?'Error':'Connecting...');}
+async function callClaude(messages,sys=''){
+  const mcpServers=APP.connector==='meta'?[{type:'url',url:'https://mcp.facebook.com/ads',name:'meta-ads'}]:[{type:'url',url:'https://connect.composio.dev/mcp',name:'composio'}];
+  const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys||'You are a helpful Meta Ads assistant.',messages,mcp_servers:mcpServers})});
+  if(!resp.ok)throw new Error('API '+resp.status);
+  return resp.json();
+}
+function parseJ(data){const txt=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');const tr=data.content.filter(b=>b.type==='mcp_tool_result');let raw=tr.length?(tr[tr.length-1].content?.[0]?.text||''):txt;if(!raw)raw=txt;const c=raw.replace(/```json|```/g,'').trim();const i=c.indexOf('{'),ai=c.indexOf('[');const s=i>=0&&(ai<0||i<ai)?i:ai>=0?ai:0;return JSON.parse(c.substring(s));}
+async function loadAccounts(){show('accountsLoading');hide('accountsList');q('barDot').className='dot dot-amber';q('barText').textContent='Connecting to Meta...';try{const data=await callClaude([{role:'user',content:'List all my Meta ad accounts. Return ONLY JSON: {"accounts":[{"id":"act_123","name":"My Account","currency":"USD","status":"ACTIVE"}]}'}]);const parsed=parseJ(data);const accounts=parsed.accounts||parsed.data||(Array.isArray(parsed)?parsed:[]);if(!accounts.length)throw new Error('No accounts found');const sel=q('selectedAccount');sel.innerHTML='<option value="">— Select account —</option>';accounts.forEach(a=>{const o=document.createElement('option');o.value=a.id||a.account_id;o.textContent=(a.name||a.account_name)+' ('+(a.id||a.account_id)+')';o.dataset.info=JSON.stringify(a);sel.appendChild(o);});hide('accountsLoading');show('accountsList');q('barDot').className='dot dot-green';q('barText').textContent='✓ '+accounts.length+' account(s) loaded';setBadge('ok',APP.connector==='meta'?'Meta MCP':'Composio');}catch(err){q('accountsLoading').innerHTML='<span style="color:var(--red)">⚠️ '+err.message+' — Check your connection and retry</span>';q('barDot').className='dot dot-red';q('barText').textContent='Connection failed';setBadge('err','Failed');}}
+async function onAccountSelected(){const sel=q('selectedAccount');const opt=sel.options[sel.selectedIndex];if(!opt.value){hide('accountDetails');q('step1Next').disabled=true;return;}APP.account={id:opt.value,name:opt.text};q('step1Next').disabled=false;show('accountDetails');q('accountStats').innerHTML='<div class="stat-c"><div class="stat-l">Account ID</div><div class="stat-v" style="font-size:11px">'+opt.value+'</div></div><div class="stat-c"><div class="stat-l">Status</div><div class="stat-v" style="color:var(--green);font-size:12px">✓ ACTIVE</div></div><div class="stat-c"><div class="stat-l">Loading</div><div class="stat-v"><div class="spinner-sm" style="margin:auto"></div></div></div><div class="stat-c"></div>';q('accountInfo').textContent='Loading pages, pixels, and catalogs...';await loadAssets(opt.value);}
+async function loadAssets(accountId){try{const data=await callClaude([{role:'user',content:'For Meta ad account '+accountId+', get: Facebook Pages (id, name), Instagram accounts (id, username), Pixels (id, name), Catalogs (id, name). Return ONLY JSON: {"pages":[{"id":"123","name":"My Page"}],"instagram_accounts":[{"id":"456","username":"@page"}],"pixels":[{"id":"789","name":"My Pixel"}],"catalogs":[]}'}]);const p=parseJ(data);APP.accountData=p;q('accountStats').innerHTML='<div class="stat-c"><div class="stat-l">Pages</div><div class="stat-v">'+(p.pages||[]).length+'</div></div><div class="stat-c"><div class="stat-l">Instagram</div><div class="stat-v">'+(p.instagram_accounts||[]).length+'</div></div><div class="stat-c"><div class="stat-l">Pixels</div><div class="stat-v">'+(p.pixels||[]).length+'</div></div><div class="stat-c"><div class="stat-l">Catalogs</div><div class="stat-v">'+(p.catalogs||[]).length+'</div></div>';q('accountInfo').textContent='✓ Account assets loaded. Proceed to campaign setup.';if(p.currency){const c=q('campCurrency');[...c.options].forEach(o=>{if(o.value===p.currency)o.selected=true;});onCurrencyChange();}}catch(e){APP.accountData={pages:[],instagram_accounts:[],pixels:[{id:'default',name:'Account Default Pixel'}],catalogs:[]};q('accountInfo').textContent='⚠️ Partial data loaded — defaults will be used.';}}
+function initStep2(){makeToggle('objRow');makeToggle('budgetTypeRow',()=>{const bt=getTV('budgetTypeRow');bt==='CBO'?(show('cboFields'),hide('aboNote')):(hide('cboFields'),show('aboNote'));});makeToggle('budgetPeriodRow');}
+function updateBidFields(){const bs=val('bidStrategy');if(['LOWEST_COST_WITH_BID_CAP','COST_CAP'].includes(bs)){show('bidAmountField');hide('roasField');}else if(bs==='MINIMUM_ROAS'){hide('bidAmountField');show('roasField');}else{hide('bidAmountField');hide('roasField');}}
+function onCurrencyChange(){const c=val('campCurrency')||'USD';q('budgCurrBadge').textContent=c;q('bidCurrBadge').textContent=c;}
+function buildAdSetHTML(i){const obj=getTV('objRow')||'OUTCOME_SALES';const goals=PERF_GOALS[obj]||PERF_GOALS.OUTCOME_SALES;const isABO=getTV('budgetTypeRow')==='ABO';const curr=val('campCurrency')||'USD';const pixels=APP.accountData.pixels||[];const pixelOpts='<option value="account_default">Account Default Pixel</option>'+pixels.map(p=>'<option value="'+p.id+'">'+( p.name||p.id)+'</option>').join('')+'<option value="custom">Enter manually...</option>';return '<div class="acc" id="as-acc-'+i+'"><div class="acc-hd" onclick="toggleAcc('as-body-'+i+'','as-arr-'+i+'')"><span><span class="paused-pill">PAUSED</span>Ad Set '+(i+1)+': <span id="as-lbl-'+i+'">Ad Set '+(i+1)+'</span></span><span id="as-arr-'+i+'">'+(i===0?'▲':'▼')+'</span></div><div class="acc-body '+(i===0?'open':'')+'" id="as-body-'+i+'"><div class="field"><label>Ad Set Name</label><input type="text" id="as-name-'+i+'" placeholder="Ad Set '+(i+1)+'" oninput="q('as-lbl-'+i+'').textContent=this.value||'Ad Set '+(i+1)+''"></div><hr class="dv"><div class="sec-ttl">Conversion Setup</div><div class="row2"><div class="field"><label>Conversion Location</label><select id="as-loc-'+i+'" onchange="updateConvFields('+i+')"><option>Website</option><option>App</option><option>Messenger</option><option>WhatsApp</option><option>Instagram</option><option>Calls</option><option>Lead Form</option></select></div><div class="field"><label>Performance Goal</label><select id="as-goal-'+i+'">'+goals.map(g=>'<option>'+g+'</option>').join('')+'</select></div></div><div id="as-pixel-section-'+i+'"><div class="row2"><div class="field"><label>Dataset / Pixel</label><select id="as-pixel-sel-'+i+'" onchange="toggleCustomPixel('+i+')">'+pixelOpts+'</select></div><div class="field" id="as-pixel-custom-wrap-'+i+'" style="display:none"><label>Pixel ID (manual)</label><input type="text" id="as-pixel-custom-'+i+'" placeholder="123456789"></div><div class="field"><label>Conversion Event</label><select id="as-convevent-'+i+'"><option>Purchase</option><option>Add To Cart</option><option>Initiate Checkout</option><option>Lead</option><option>Complete Registration</option><option>View Content</option><option>Search</option><option>Subscribe</option><option>Contact</option></select></div></div></div><div class="row2"><div class="field"><label>Cost Per Result Goal (optional)</label><div class="input-pfx"><span class="pfx">'+curr+'</span><input type="number" id="as-cprg-'+i+'" placeholder="0.00" min="0" step="0.01"></div></div><div class="field"><label>Attribution Window</label><select id="as-attrib-'+i+'"><option>7-day click + 1-day view</option><option>1-day click</option><option>7-day click</option><option>1-day click + 1-day view</option></select></div></div>'+(isABO?'<hr class="dv"><div class="sec-ttl">Budget (ABO)</div><div class="row2"><div class="field"><label>Budget Period</label><div class="trow" id="as-budp-'+i+'"><button class="tbtn on" data-v="Daily">Daily</button><button class="tbtn" data-v="Lifetime">Lifetime</button></div></div><div class="field"><label>Budget Amount</label><div class="input-pfx"><span class="pfx">'+curr+'</span><input type="number" id="as-budget-'+i+'" placeholder="0.00" min="0" step="0.01"></div></div></div>':'')+'<hr class="dv"><div class="sec-ttl">Schedule</div><div class="row3"><div class="field"><label>Start Date</label><input type="date" id="as-sd-'+i+'"></div><div class="field"><label>Start Time</label><input type="time" id="as-st-'+i+'"></div><div class="field"><label>End Date (optional)</label><input type="date" id="as-ed-'+i+'"></div></div><hr class="dv"><div class="sec-ttl">Audience</div><div class="field"><label>Locations</label><input type="text" id="as-audloc-'+i+'" placeholder="United States, United Kingdom..."></div><div class="row3"><div class="field"><label>Age Min</label><select id="as-agemin-'+i+'">'+Array.from({length:53},(_,k)=>k+13).map(a=>'<option '+(a===18?'selected':'')+'>'+a+'</option>').join('')+'</select></div><div class="field"><label>Age Max</label><select id="as-agemax-'+i+'">'+Array.from({length:47},(_,k)=>k+19).map(a=>'<option '+(a===65?'selected':'')+'>'+a+'</option>').join('')+'<option>65+</option></select></div><div class="field"><label>Gender</label><select id="as-gender-'+i+'"><option>All</option><option>Male</option><option>Female</option></select></div></div><div class="field"><label>Languages</label><div class="trow" style="margin-bottom:7px"><button class="tbtn" onclick="addTag(q('as-langs-'+i+''),'English','tag-b')">English</button><button class="tbtn" onclick="addTag(q('as-langs-'+i+''),'Arabic','tag-b')">Arabic</button></div><div class="tag-wrap" id="as-langs-'+i+'"><input type="text" id="as-lang-inp-'+i+'" placeholder="Type language + Enter" onkeydown="if(event.key==='Enter'){addTag(q('as-langs-'+i+''),this.value,'tag-b');this.value='';}"></div></div><div class="field"><label>Detailed Targeting</label><div class="tag-wrap" id="as-detail-'+i+'"></div></div><div class="field"><label>Custom Audiences</label><div class="tag-wrap" id="as-custom-'+i+'"></div></div><div class="field"><label>Exclude Audiences</label><div class="tag-wrap" id="as-excl-'+i+'"></div></div><div class="swr"><span>Advantage+ Audience</span><div class="sw" id="as-aplus-'+i+'" onclick="toggleSw('as-aplus-'+i+'')"></div></div><hr class="dv"><div class="sec-ttl">Placements</div><div class="swr"><span>Advantage+ Placements</span><div class="sw on" id="as-advpl-'+i+'" onclick="toggleSw('as-advpl-'+i+'');updatePlacement('+i+')"></div></div><div id="as-manual-'+i+'" class="hidden"><div class="cb-row" id="as-platforms-'+i+'"><label class="cb-item"><input type="checkbox" value="Facebook"> Facebook</label><label class="cb-item"><input type="checkbox" value="Instagram"> Instagram</label><label class="cb-item"><input type="checkbox" value="Messenger"> Messenger</label><label class="cb-item"><input type="checkbox" value="Audience Network"> Audience Network</label><label class="cb-item"><input type="checkbox" value="WhatsApp"> WhatsApp</label></div></div><div class="swr"><span>Exclude Skippable In-Stream Ads</span><div class="sw" id="as-skip-'+i+'" onclick="toggleSw('as-skip-'+i+'')"></div></div></div></div>';}
+function toggleAcc(bodyId,arrId){const b=q(bodyId);if(!b)return;const open=b.classList.toggle('open');const a=q(arrId);if(a)a.textContent=open?'▲':'▼';}
+function toggleCustomPixel(i){const s=q('as-pixel-sel-'+i),w=q('as-pixel-custom-wrap-'+i);if(s&&w)w.style.display=s.value==='custom'?'block':'none';}
+function updateConvFields(i){const loc=q('as-loc-'+i)?.value||'Website';const s=q('as-pixel-section-'+i);if(s)s.style.display=['Website','App','Lead Form'].includes(loc)?'block':'none';}
+function updatePlacement(i){q('as-manual-'+i)?.classList.toggle('hidden',swOn('as-advpl-'+i));}
+function rebuildAdSets(){const cont=q('adSetsContainer');cont.innerHTML='';for(let i=0;i<APP.adsetsCount;i++)cont.insertAdjacentHTML('beforeend',buildAdSetHTML(i));for(let i=0;i<APP.adsetsCount;i++){makeTagInput('as-detail-'+i);makeTagInput('as-custom-'+i);makeTagInput('as-excl-'+i,'tag-r');if(q('as-budp-'+i))makeToggle('as-budp-'+i);updateConvFields(i);}}
+function buildAdHTML(asi,ai){const pages=APP.accountData.pages||[];const igs=APP.accountData.instagram_accounts||[];const cats=APP.accountData.catalogs||[];const pageOpts='<option value="account_default">Account Default Page</option>'+pages.map(p=>'<option value="'+p.id+'">'+(p.name||p.id)+'</option>').join('');const igOpts='<option value="account_default">Account Default Instagram</option>'+igs.map(p=>'<option value="'+p.id+'">'+(p.username||p.id)+'</option>').join('');const catOpts='<option value="">— None —</option>'+cats.map(c=>'<option value="'+c.id+'">'+(c.name||c.id)+'</option>').join('');const curr=val('campCurrency')||'USD';return '<div class="acc" id="ad-acc-'+asi+'-'+ai+'"><div class="acc-hd" onclick="toggleAcc('ad-body-'+asi+'-'+ai+'','ad-arr-'+asi+'-'+ai+'')"><span><span class="paused-pill">PAUSED</span>Ad '+(ai+1)+': <span id="ad-lbl-'+asi+'-'+ai+'">Ad '+(ai+1)+'</span></span><span id="ad-arr-'+asi+'-'+ai+'">'+(ai===0?'▲':'▼')+'</span></div><div class="acc-body '+(ai===0?'open':'')+'" id="ad-body-'+asi+'-'+ai+'"><div class="field"><label>Ad Name</label><input type="text" id="ad-name-'+asi+'-'+ai+'" placeholder="Ad '+(ai+1)+'" oninput="q('ad-lbl-'+asi+'-'+ai+'').textContent=this.value||'Ad '+(ai+1)+''"></div><hr class="dv"><div class="sec-ttl">Identity</div><div class="row2"><div class="field"><label>Facebook Page</label><select id="ad-page-'+asi+'-'+ai+'">'+pageOpts+'</select></div><div class="field"><label>Instagram Profile</label><select id="ad-ig-'+asi+'-'+ai+'">'+igOpts+'</select></div></div><hr class="dv"><div class="sec-ttl">Creation Type</div><div class="trow" id="ad-crtype-'+asi+'-'+ai+'"><button class="tbtn on" data-v="create">Create New Ad</button><button class="tbtn" data-v="existing">Use Existing Post</button></div><div id="ad-existing-'+asi+'-'+ai+'" class="field hidden" style="margin-top:10px"><label>Post ID / URL</label><input type="text" id="ad-postid-'+asi+'-'+ai+'" placeholder="https://..."></div><div id="ad-new-'+asi+'-'+ai+'"><hr class="dv"><div class="row2"><div class="field"><label>Ad Format</label><select id="ad-fmt-'+asi+'-'+ai+'" onchange="updateAdFormat('+asi+','+ai+')"><option>Single Image / Video</option><option>Carousel</option><option>Catalog Carousel</option><option>Collection</option><option>Story / Reel</option></select></div><div class="field"><label>Schedule Date (optional)</label><input type="date" id="ad-sd-'+asi+'-'+ai+'"></div></div><hr class="dv"><div class="sec-ttl">Destination</div><div class="row2"><div class="field"><label>Website URL</label><input type="text" id="ad-url-'+asi+'-'+ai+'" placeholder="https://..." oninput="updateUTM('+asi+','+ai+')"></div><div class="field"><label>Display URL (optional)</label><input type="text" id="ad-durl-'+asi+'-'+ai+'" placeholder="example.com"></div></div><div id="ad-catalog-section-'+asi+'-'+ai+'" class="hidden"><hr class="dv"><div class="sec-ttl">Catalog</div><div class="row2"><div class="field"><label>Catalog</label><select id="ad-catalog-'+asi+'-'+ai+'">'+catOpts+'</select></div><div class="field"><label>Product Set</label><select id="ad-prodset-'+asi+'-'+ai+'"><option value="all">All Products</option></select></div></div></div><hr class="dv"><div class="swr"><span>Advantage+ Creative</span><div class="sw on" id="ad-advcr-'+asi+'-'+ai+'" onclick="toggleSw('ad-advcr-'+asi+'-'+ai+'')"></div></div><hr class="dv"><div class="sec-ttl">Creative Content</div><div id="ad-creative-'+asi+'-'+ai+'"></div><hr class="dv"><div class="field"><label>Call to Action</label><select id="ad-cta-'+asi+'-'+ai+'">'+CTAS.map(c=>'<option>'+c+'</option>').join('')+'</select></div><hr class="dv"><div class="sec-ttl">Tracking & UTM</div><div class="swr"><span>Enable Tracking / UTM</span><div class="sw on" id="ad-trk-'+asi+'-'+ai+'" onclick="toggleSw('ad-trk-'+asi+'-'+ai+'');toggleUTM('+asi+','+ai+')"></div></div><div id="ad-utm-wrap-'+asi+'-'+ai+'"><div class="row2"><div class="field"><label>UTM Source</label><select id="ad-utm-src-'+asi+'-'+ai+'" onchange="updateUTM('+asi+','+ai+')"><option value="{{site_source_name}}">Dynamic</option><option value="facebook">facebook</option><option value="instagram">instagram</option><option value="messenger">messenger</option></select></div><div class="field"><label>UTM Medium</label><select id="ad-utm-med-'+asi+'-'+ai+'" onchange="updateUTM('+asi+','+ai+')"><option value="paid_social">paid_social</option><option value="cpc">cpc</option><option value="social">social</option></select></div></div><div class="row2"><div class="field"><label>UTM Campaign</label><input type="text" id="ad-utm-camp-'+asi+'-'+ai+'" value="{{campaign.id}}" oninput="updateUTM('+asi+','+ai+')"></div><div class="field"><label>UTM Content</label><input type="text" id="ad-utm-cont-'+asi+'-'+ai+'" value="{{ad.id}}" oninput="updateUTM('+asi+','+ai+')"></div></div><div class="field"><label>UTM Preview</label><div class="utm-preview" id="ad-utm-prev-'+asi+'-'+ai+'">Enter a destination URL above to preview</div></div></div></div></div></div>';}
+function updateAdFormat(asi,ai){const fmt=q('ad-fmt-'+asi+'-'+ai)?.value||'';q('ad-catalog-section-'+asi+'-'+ai)?.classList.toggle('hidden',!['Catalog Carousel','Collection'].includes(fmt));const cr=q('ad-creative-'+asi+'-'+ai);if(!cr)return;if(fmt==='Carousel'){cr.innerHTML='<div class="field"><label>Primary Text</label><textarea id="ad-pt-'+asi+'-'+ai+'" placeholder="Up to 125 chars recommended"></textarea></div>'+[0,1,2].map(ci=>'<div style="background:var(--s3);border:1px solid var(--bdr);border-radius:8px;padding:12px;margin-bottom:8px"><div class="sec-ttl">Card '+(ci+1)+'</div><div class="row2"><div class="field"><label>Media URL</label><input type="text" id="ad-c'+ci+'-m-'+asi+'-'+ai+'"></div><div class="field"><label>Card URL</label><input type="text" id="ad-c'+ci+'-u-'+asi+'-'+ai+'"></div></div><div class="row2"><div class="field"><label>Headline</label><input type="text" id="ad-c'+ci+'-h-'+asi+'-'+ai+'"></div><div class="field"><label>Description</label><input type="text" id="ad-c'+ci+'-d-'+asi+'-'+ai+'"></div></div></div>').join('');}else{cr.innerHTML='<div class="field"><label>Media URL</label><input type="text" id="ad-media-'+asi+'-'+ai+'" placeholder="https://..."></div><div class="field"><label>Primary Text</label><textarea id="ad-pt-'+asi+'-'+ai+'" placeholder="Up to 125 chars" oninput="let c=q('ad-pt-cc-'+asi+'-'+ai+'');if(c)c.textContent=this.value.length+' / 125'"></textarea><div class="char-hint" id="ad-pt-cc-'+asi+'-'+ai+'">0 / 125</div></div><div class="row2"><div class="field"><label>Headline (max 40)</label><input type="text" id="ad-hl-'+asi+'-'+ai+'" maxlength="40" oninput="let c=q('ad-hl-cc-'+asi+'-'+ai+'');if(c)c.textContent=this.value.length+' / 40'"><div class="char-hint" id="ad-hl-cc-'+asi+'-'+ai+'">0 / 40</div></div><div class="field"><label>Description (max 30)</label><input type="text" id="ad-desc-'+asi+'-'+ai+'" maxlength="30" oninput="let c=q('ad-desc-cc-'+asi+'-'+ai+'');if(c)c.textContent=this.value.length+' / 30'"><div class="char-hint" id="ad-desc-cc-'+asi+'-'+ai+'">0 / 30</div></div></div>';}}
+function toggleUTM(asi,ai){q('ad-utm-wrap-'+asi+'-'+ai)?.classList.toggle('hidden',!swOn('ad-trk-'+asi+'-'+ai));}
+function updateUTM(asi,ai){const base=q('ad-url-'+asi+'-'+ai)?.value.trim()||'';const prev=q('ad-utm-prev-'+asi+'-'+ai);if(!prev)return;if(!base){prev.textContent='Enter a destination URL above to preview';return;}const src=q('ad-utm-src-'+asi+'-'+ai)?.value||'';const med=q('ad-utm-med-'+asi+'-'+ai)?.value||'';const camp=q('ad-utm-camp-'+asi+'-'+ai)?.value||'';const cont=q('ad-utm-cont-'+asi+'-'+ai)?.value||'';prev.textContent=base+(base.includes('?')?'&':'?')+'utm_source='+src+'&utm_medium='+med+'&utm_campaign='+camp+'&utm_content='+cont;}
+function rebuildAds(){const cont=q('adsContainer');cont.innerHTML='';for(let i=0;i<APP.adsetsCount;i++){const asName=q('as-name-'+i)?.value||'Ad Set '+(i+1);cont.insertAdjacentHTML('beforeend','<div style="background:var(--s3);border:1px solid var(--bdr);border-radius:8px;padding:10px 14px;margin-bottom:8px;font-weight:700;font-size:13px;color:#fff">📦 '+asName+'</div>');for(let j=0;j<APP.adsCount;j++)cont.insertAdjacentHTML('beforeend',buildAdHTML(i,j));}for(let i=0;i<APP.adsetsCount;i++)for(let j=0;j<APP.adsCount;j++){makeToggle('ad-crtype-'+i+'-'+j,()=>{const v=getTV('ad-crtype-'+i+'-'+j);q('ad-existing-'+i+'-'+j)?.classList.toggle('hidden',v!=='existing');q('ad-new-'+i+'-'+j)?.classList.toggle('hidden',v==='existing');});updateAdFormat(i,j);}}
+function goStep(n){if(n===3)rebuildAdSets();if(n===4)rebuildAds();if(n===5)buildSummary();[1,2,3,4,5].forEach(i=>q('step'+i)?.classList.toggle('hidden',i!==n));APP.step=n;q('stepsNav').querySelectorAll('.sbtn').forEach((b,i)=>{b.classList.toggle('active',i+1===n);b.classList.toggle('done',i+1<n);});window.scrollTo({top:0,behavior:'smooth'});}
+function changeCount(type,d){if(type==='adsets'){APP.adsetsCount=Math.max(1,Math.min(8,APP.adsetsCount+d));q('adsetsCount').textContent=APP.adsetsCount;rebuildAdSets();}else{APP.adsCount=Math.max(1,Math.min(8,APP.adsCount+d));q('adsCount').textContent=APP.adsCount;rebuildAds();}}
+function getAsData(i){const ps=q('as-pixel-sel-'+i)?.value||'account_default';return {name:val('as-name-'+i)||'Ad Set '+(i+1),convLoc:q('as-loc-'+i)?.value||'',perfGoal:q('as-goal-'+i)?.value||'',pixel:ps==='custom'?val('as-pixel-custom-'+i):ps==='account_default'?'Account Default':ps,convEvent:q('as-convevent-'+i)?.value||'',cprg:val('as-cprg-'+i),attrib:q('as-attrib-'+i)?.value||'',budPeriod:getTV('as-budp-'+i)||'Daily',budget:val('as-budget-'+i),sd:val('as-sd-'+i),st:val('as-st-'+i),ed:val('as-ed-'+i),loc:val('as-audloc-'+i),ageMin:q('as-agemin-'+i)?.value||'18',ageMax:q('as-agemax-'+i)?.value||'65',gender:q('as-gender-'+i)?.value||'All',langs:getTags('as-langs-'+i).join(', '),detail:getTags('as-detail-'+i).join(', '),custom:getTags('as-custom-'+i).join(', '),excl:getTags('as-excl-'+i).join(', '),aplusAud:swOn('as-aplus-'+i)?'ON':'OFF',placement:swOn('as-advpl-'+i)?'Advantage+':'Manual',platforms:[...(q('as-platforms-'+i)?.querySelectorAll('input:checked')||[])].map(c=>c.value).join(', '),skip:swOn('as-skip-'+i)?'YES':'NO'};}
+function getAdData(asi,ai){const fmt=q('ad-fmt-'+asi+'-'+ai)?.value||'Single Image / Video';const crType=getTV('ad-crtype-'+asi+'-'+ai)||'create';const trackOn=swOn('ad-trk-'+asi+'-'+ai);let utmUrl='';if(trackOn){const base=val('ad-url-'+asi+'-'+ai);if(base){const src=q('ad-utm-src-'+asi+'-'+ai)?.value||'';const med=q('ad-utm-med-'+asi+'-'+ai)?.value||'';const camp=q('ad-utm-camp-'+asi+'-'+ai)?.value||'';const cont=q('ad-utm-cont-'+asi+'-'+ai)?.value||'';utmUrl=base+(base.includes('?')?'&':'?')+'utm_source='+src+'&utm_medium='+med+'&utm_campaign='+camp+'&utm_content='+cont;}}let creative='';if(crType==='create'){if(fmt==='Carousel'){creative='Primary Text: '+val('ad-pt-'+asi+'-'+ai)+'
+Cards:
+'+[0,1,2].map(ci=>'  Card '+(ci+1)+': '+val('ad-c'+ci+'-h-'+asi+'-'+ai)+' | '+val('ad-c'+ci+'-d-'+asi+'-'+ai)+' | '+val('ad-c'+ci+'-u-'+asi+'-'+ai)).join('
+');}else{creative='Media: '+val('ad-media-'+asi+'-'+ai)+'
+Primary Text: '+val('ad-pt-'+asi+'-'+ai)+'
+Headline: '+val('ad-hl-'+asi+'-'+ai)+'
+Description: '+val('ad-desc-'+asi+'-'+ai);}}return {name:val('ad-name-'+asi+'-'+ai)||'Ad '+(ai+1),page:q('ad-page-'+asi+'-'+ai)?.options[q('ad-page-'+asi+'-'+ai)?.selectedIndex]?.text||'Account Default Page',ig:q('ad-ig-'+asi+'-'+ai)?.options[q('ad-ig-'+asi+'-'+ai)?.selectedIndex]?.text||'Account Default Instagram',crType,postId:val('ad-postid-'+asi+'-'+ai),fmt,sd:val('ad-sd-'+asi+'-'+ai),url:val('ad-url-'+asi+'-'+ai),durl:val('ad-durl-'+asi+'-'+ai),catalog:q('ad-catalog-'+asi+'-'+ai)?.options[q('ad-catalog-'+asi+'-'+ai)?.selectedIndex]?.text||'',advCr:swOn('ad-advcr-'+asi+'-'+ai)?'ON':'OFF',creative,cta:q('ad-cta-'+asi+'-'+ai)?.value||'',tracking:trackOn?'ON':'OFF',utmUrl};}
+function buildBrief(){const cn=val('campName')||'Campaign';const obj=getTV('objRow')||'OUTCOME_SALES';const bt=getTV('budgetTypeRow')||'CBO';const curr=val('campCurrency')||'USD';const bp=getTV('budgetPeriodRow')||'Daily';const bamt=val('campBudget');const bid=val('bidStrategy')||'LOWEST_COST_WITHOUT_CAP';const accId=APP.account?.id||'unknown';const accName=APP.account?.name||'unknown';let L=[];L.push('You have access to Meta Ads MCP. Create the following campaign EXACTLY as specified.');L.push('All items MUST be created in PAUSED status.
+');L.push('=== AD ACCOUNT ===');L.push(pad('Account ID')+' : '+accId);L.push(pad('Account Name')+' : '+accName+'
+');L.push('=== CAMPAIGN ===');L.push(pad('Name')+' : '+cn);L.push(pad('Objective')+' : '+obj);L.push(pad('Budget Type')+' : '+bt);if(bt==='CBO'){L.push(pad('Currency')+' : '+curr);L.push(pad('Budget Period')+' : '+bp);L.push(pad('Budget')+' : '+(bamt||'—'));}L.push(pad('Bid Strategy')+' : '+bid);if(['LOWEST_COST_WITH_BID_CAP','COST_CAP'].includes(bid))L.push(pad('Bid/Cost Amount')+' : '+(val('bidAmount')||'—')+' '+curr);if(bid==='MINIMUM_ROAS')L.push(pad('ROAS Target')+' : x'+(val('roasVal')||'—'));L.push(pad('Status')+' : PAUSED
+');L.push('=== AD SETS ('+APP.adsetsCount+') ===');for(let i=0;i<APP.adsetsCount;i++){const d=getAsData(i);L.push('
+[AD SET '+(i+1)+'] '+d.name);L.push(pad('Conversion Location')+' : '+d.convLoc);L.push(pad('Performance Goal')+' : '+d.perfGoal);L.push(pad('Dataset/Pixel')+' : '+d.pixel);if(d.convEvent)L.push(pad('Conversion Event')+' : '+d.convEvent);if(d.cprg)L.push(pad('Cost Per Result Goal')+' : '+d.cprg+' '+curr);L.push(pad('Attribution')+' : '+d.attrib);if(bt==='ABO')L.push(pad('Budget')+' : '+(d.budget||'—')+' '+curr+' / '+d.budPeriod);L.push(pad('Start')+' : '+(d.sd||'ASAP')+' '+(d.st||''));if(d.ed)L.push(pad('End')+' : '+d.ed);L.push(pad('Locations')+' : '+(d.loc||'—'));L.push(pad('Age Range')+' : '+d.ageMin+' - '+d.ageMax);L.push(pad('Gender')+' : '+d.gender);if(d.langs)L.push(pad('Languages')+' : '+d.langs);if(d.detail)L.push(pad('Detailed Targeting')+' : '+d.detail+'
+  NOTE: Use closest available match. Skip if unavailable.');if(d.custom)L.push(pad('Custom Audiences')+' : '+d.custom+'
+  NOTE: Check if exist. If yes attach, if no CREATE them first.');if(d.excl)L.push(pad('Exclude Audiences')+' : '+d.excl);L.push(pad('Advantage+ Audience')+' : '+d.aplusAud);L.push(pad('Placement')+' : '+d.placement);if(d.placement==='Manual'&&d.platforms)L.push(pad('Platforms')+' : '+d.platforms);L.push(pad('Exclude Skippable')+' : '+d.skip);}L.push('
+=== ADS ===');for(let i=0;i<APP.adsetsCount;i++){const asN=q('as-name-'+i)?.value||'Ad Set '+(i+1);L.push('
+[AD SET '+(i+1)+' - '+asN+']');for(let j=0;j<APP.adsCount;j++){const d=getAdData(i,j);L.push('
+  [AD '+(j+1)+'] '+d.name);L.push('  '+pad('Facebook Page')+' : '+d.page);L.push('  '+pad('Instagram')+' : '+d.ig);L.push('  '+pad('Creation Type')+' : '+d.crType);if(d.crType==='existing'){L.push('  '+pad('Post ID/URL')+' : '+(d.postId||'—'));}else{L.push('  '+pad('Format')+' : '+d.fmt);if(d.sd)L.push('  '+pad('Schedule')+' : '+d.sd);L.push('  '+pad('Destination URL')+' : '+(d.url||'—'));if(d.durl)L.push('  '+pad('Display URL')+' : '+d.durl);if(d.catalog)L.push('  '+pad('Catalog')+' : '+d.catalog);L.push('  '+pad('Advantage+ Creative')+' : '+d.advCr);d.creative.split('
+').forEach(l=>L.push('  '+l));L.push('  '+pad('CTA')+' : '+d.cta);L.push('  '+pad('Tracking')+' : '+d.tracking);if(d.utmUrl)L.push('  '+pad('UTM URL')+' : '+d.utmUrl);}}}L.push('
+=== EXECUTION INSTRUCTIONS ===');L.push('1. Create campaign in PAUSED status.');L.push('2. Per ad set: use account default pixel if marked Account Default. Create custom audiences if not found.');L.push('3. Per ad: use account default page/IG if marked Account Default.');L.push('4. Confirm all items are PAUSED after creation.');L.push('5. Report: campaign ID, all ad set IDs, all ad IDs, and any substitutions or errors.');return L.join('
+');}
+function buildSummary(){const bt=getTV('budgetTypeRow')||'CBO';const curr=val('campCurrency')||'USD';const bamt=val('campBudget');const obj=getTV('objRow')||'OUTCOME_SALES';const bid=val('bidStrategy')||'';const cn=val('campName')||'Campaign';q('summaryStats').innerHTML='<div class="stat-c"><div class="stat-l">Objective</div><div class="stat-v" style="font-size:12px">'+obj.replace('OUTCOME_','')+'</div></div><div class="stat-c"><div class="stat-l">Budget Type</div><div class="stat-v" style="font-size:12px">'+bt+'</div></div><div class="stat-c"><div class="stat-l">Budget</div><div class="stat-v" style="font-size:12px">'+(bt==='CBO'?(bamt||'—')+' '+curr:'Per Ad Set')+'</div></div><div class="stat-c"><div class="stat-l">Ad Sets / Ads</div><div class="stat-v" style="font-size:12px">'+APP.adsetsCount+' / '+APP.adsCount+'</div></div>';let tree='<div class="tree-camp">📢 '+cn+' <span style="font-size:11px;color:var(--muted);font-weight:400">'+obj.replace('OUTCOME_','')+'</span></div>';for(let i=0;i<APP.adsetsCount;i++){tree+='<div class="tree-adset"><div class="tree-adset-name">🎯 '+(q('as-name-'+i)?.value||'Ad Set '+(i+1))+'</div>';for(let j=0;j<APP.adsCount;j++)tree+='<div class="tree-ad">🖼 '+(q('ad-name-'+i+'-'+j)?.value||'Ad '+(j+1))+'</div>';tree+='</div>';}q('summaryTree').innerHTML=tree;q('briefBox').textContent=buildBrief();if(APP.connector==='composio'){show('connectorNote');q('connectorNote').textContent='Using Composio connector — routing through Composio Meta integration.';}else hide('connectorNote');}
+function copyBrief(){navigator.clipboard.writeText(q('briefBox').textContent).then(()=>{const b=event.target;const o=b.textContent;b.textContent='✅ Copied!';setTimeout(()=>b.textContent=o,2000);});}
+function openInClaude(){window.open('https://claude.ai/new?q='+encodeURIComponent(q('briefBox').textContent),'_blank');}
+function buildJSON(){
+  const bt=getTV('budgetTypeRow')||'CBO';const curr=val('campCurrency')||'USD';
+  const bp=getTV('budgetPeriodRow')||'Daily';const bamt=parseFloat(val('campBudget')||'0');
+  const bid=val('bidStrategy')||'LOWEST_COST_WITHOUT_CAP';const obj=getTV('objRow')||'OUTCOME_SALES';
+  const adSets=[];
+  for(let i=0;i<APP.adsetsCount;i++){
+    const ps=q('as-pixel-sel-'+i)?.value||'account_default';
+    const pixelId=ps==='custom'?val('as-pixel-custom-'+i):ps==='account_default'?'Account Default':ps;
+    const loc=val('as-audloc-'+i);
+    const targeting={age_min:parseInt(q('as-agemin-'+i)?.value||'18'),age_max:parseInt(q('as-agemax-'+i)?.value||'65')};
+    if(loc)targeting.geo_locations={countries:loc.split(',').map(s=>s.trim()).filter(Boolean)};
+    const gender=q('as-gender-'+i)?.value||'All';
+    if(gender==='Male')targeting.genders=[1];if(gender==='Female')targeting.genders=[2];
+    const langs=getTags('as-langs-'+i);const detail=getTags('as-detail-'+i);
+    const custom=getTags('as-custom-'+i);const excl=getTags('as-excl-'+i);
+    if(langs.length)targeting.locales=langs;
+    if(detail.length)targeting.flexible_spec=[{interests:detail.map(d=>({name:d}))}];
+    const asBudget=parseFloat(val('as-budget-'+i)||'0');
+    adSets.push({name:val('as-name-'+i)||'Ad Set '+(i+1),optimization_goal:q('as-goal-'+i)?.value||'OFFSITE_CONVERSIONS',billing_event:'IMPRESSIONS',targeting,pixel_id:pixelId,conversion_event:q('as-convevent-'+i)?.value||'PURCHASE',attribution_spec:q('as-attrib-'+i)?.value||'7-day click + 1-day view',start_time:val('as-sd-'+i)||null,end_time:val('as-ed-'+i)||null,advantage_plus_audience:swOn('as-aplus-'+i),placement:swOn('as-advpl-'+i)?'Advantage+':'Manual',daily_budget:bt==='ABO'&&asBudget?Math.round(asBudget*100):null,custom_audiences:custom,excluded_audiences:excl,status:'PAUSED'});
+  }
+  const ads=[];
+  for(let i=0;i<APP.adsetsCount;i++){
+    for(let j=0;j<APP.adsCount;j++){
+      const fmt=q('ad-fmt-'+i+'-'+j)?.value||'Single Image / Video';
+      const crType=getTV('ad-crtype-'+i+'-'+j)||'create';const trackOn=swOn('ad-trk-'+i+'-'+j);
+      let utmUrl='';
+      if(trackOn){const base=val('ad-url-'+i+'-'+j);if(base){const src=q('ad-utm-src-'+i+'-'+j)?.value||'';const med=q('ad-utm-med-'+i+'-'+j)?.value||'';const camp=q('ad-utm-camp-'+i+'-'+j)?.value||'';const cont=q('ad-utm-cont-'+i+'-'+j)?.value||'';utmUrl=base+(base.includes('?')?'&':'?')+'utm_source='+src+'&utm_medium='+med+'&utm_campaign='+camp+'&utm_content='+cont;}}
+      ads.push({name:val('ad-name-'+i+'-'+j)||'Ad '+(j+1),ad_set_index:i,page_id:q('ad-page-'+i+'-'+j)?.value||'account_default',instagram_id:q('ad-ig-'+i+'-'+j)?.value||'account_default',creation_type:crType,existing_post_id:crType==='existing'?val('ad-postid-'+i+'-'+j):null,format:fmt,advantage_plus_creative:swOn('ad-advcr-'+i+'-'+j),creative:{title:val('ad-hl-'+i+'-'+j)||'',body:val('ad-pt-'+i+'-'+j)||'',image_url:val('ad-media-'+i+'-'+j)||'',link_url:utmUrl||val('ad-url-'+i+'-'+j)||'',display_url:val('ad-durl-'+i+'-'+j)||'',call_to_action:(q('ad-cta-'+i+'-'+j)?.value||'LEARN_MORE').toUpperCase().replace(/ /g,'_'),description:val('ad-desc-'+i+'-'+j)||''},status:'PAUSED'});
+    }
+  }
+  return {account_name:APP.account?.name||val('manualAccountName')||'',chat_id:'',campaign:{name:val('campName')||'Campaign',objective:obj,budget_type:bt,currency:curr,bid_strategy:bid,daily_budget:bt==='CBO'&&bp==='Daily'&&bamt?Math.round(bamt*100):null,lifetime_budget:bt==='CBO'&&bp==='Lifetime'&&bamt?Math.round(bamt*100):null,status:'PAUSED'},ad_sets:adSets,ads};
+}
+async function sendToN8n(){
+  const btn=q('createBtn');btn.disabled=true;btn.innerHTML='<span class="spin"></span> Sending...';
+  show('outputPanel');q('outputHd').textContent='📤 Sending campaign to n8n...';
+  const body=q('outputBody');body.textContent='';
+  try{
+    const resp=await fetch('https://moshi-md.app.n8n.cloud/webhook/meta-campaign',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(buildJSON())});
+    if(!resp.ok)throw new Error('Webhook returned '+resp.status);
+    q('outputHd').textContent='✅ Sent successfully!';
+    body.textContent='Campaign sent to n8n.
+
+Check Telegram — you will receive an approval message shortly.
+
+✅ Approve → campaign created in Meta (PAUSED)
+❌ Decline → cancelled, nothing created';
+    btn.innerHTML='✅ Sent';btn.style.background='var(--green)';
+  }catch(err){
+    q('outputHd').textContent='⚠️ Send failed';
+    body.textContent='Error: '+err.message+'
+
+Make sure the n8n workflow is active.';
+    btn.disabled=false;btn.innerHTML='🔄 Retry';
+  }
+}!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Meta Campaign Planner</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{--bg:#0b0e18;--s1:#111520;--s2:#161b2e;--s3:#1d2440;--s4:#242d50;--bdr:#2c3558;--bdr2:#3d4a75;--text:#d8dff5;--muted:#6e7da6;--dim:#3f4d78;--blue:#3b6ef5;--blue-d:#2a55d4;--green:#22c55e;--red:#ef4444;--amber:#f59e0b;--purple:#a78bfa}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px}
+.app{max-width:940px;margin:0 auto;padding:24px 16px 100px}
+.header{display:flex;align-items:center;gap:16px;margin-bottom:28px;padding:20px 24px;background:var(--s2);border:1px solid var(--bdr);border-radius:14px}
+.logo{width:44px;height:44px;background:var(--blue);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:900;color:#fff;flex-shrink:0}
+.header-text h1{font-size:18px;font-weight:700;color:#fff;margin-bottom:3px}
+.header-text p{font-size:12px;color:var(--muted)}
+.header-right{margin-left:auto;display:flex;align-items:center;gap:10px}
+.conn-badge{display:flex;align-items:center;gap:6px;padding:6px 13px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid;cursor:pointer;transition:all .15s}
+.conn-badge.idle{background:rgba(245,158,11,.08);border-color:rgba(245,158,11,.25);color:var(--amber)}
+.conn-badge.ok{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.25);color:var(--green)}
+.conn-badge.err{background:rgba(239,68,68,.08);border-color:rgba(239,68,68,.25);color:var(--red)}
+.dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot-green{background:var(--green);animation:pulse 2s infinite}
+.dot-amber{background:var(--amber)}
+.dot-red{background:var(--red)}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.72);display:flex;align-items:center;justify-content:center;z-index:200;backdrop-filter:blur(4px)}
+.modal{background:var(--s2);border:1px solid var(--bdr);border-radius:16px;padding:28px;width:500px;max-width:94vw}
+.modal h2{font-size:16px;font-weight:700;color:#fff;margin-bottom:6px}
+.modal-sub{font-size:12px;color:var(--muted);margin-bottom:20px}
+.conn-opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px}
+.conn-opt{padding:18px;border:1.5px solid var(--bdr);border-radius:10px;cursor:pointer;background:var(--s3);transition:all .2s;text-align:center}
+.conn-opt:hover,.conn-opt.sel{border-color:var(--blue);background:rgba(59,110,245,.1)}
+.conn-opt .ico{font-size:28px;margin-bottom:8px}
+.conn-opt h3{font-size:13px;font-weight:700;color:#fff;margin-bottom:4px}
+.conn-opt p{font-size:11px;color:var(--muted);margin:0}
+.modal-actions{display:flex;gap:8px;justify-content:flex-end}
+.hidden{display:none!important}
+.steps{display:flex;margin-bottom:24px;background:var(--s2);border-radius:12px;padding:5px;border:1px solid var(--bdr);gap:2px}
+.sbtn{flex:1;padding:10px 4px;border:none;background:transparent;color:var(--muted);cursor:pointer;border-radius:8px;font-size:11px;font-weight:600;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:5px}
+.snum{width:22px;height:22px;border-radius:50%;background:var(--s4);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;transition:all .2s}
+.sbtn.active{background:var(--s3);color:#fff}.sbtn.active .snum{background:var(--blue);color:#fff}
+.sbtn.done{color:var(--green)}.sbtn.done .snum{background:var(--green);color:#fff}
+.card{background:var(--s2);border:1px solid var(--bdr);border-radius:14px;padding:22px;margin-bottom:12px}
+.card-hd{font-size:14px;font-weight:700;margin-bottom:18px;color:#fff;display:flex;align-items:center;gap:10px}
+.card-ico{width:30px;height:30px;border-radius:8px;background:var(--blue);display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.field{margin-bottom:14px}
+label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;font-weight:600}
+input[type=text],input[type=number],input[type=date],input[type=time],select,textarea{width:100%;background:var(--s3);border:1px solid var(--bdr);border-radius:8px;padding:9px 12px;color:var(--text);font-size:13px;outline:none;transition:border .15s;font-family:inherit}
+input:focus,select:focus,textarea:focus{border-color:var(--blue);background:var(--s4)}
+select option{background:#161b2e}
+textarea{resize:vertical;min-height:72px;line-height:1.5}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.input-pfx{display:flex;align-items:stretch}
+.input-pfx .pfx{padding:0 11px;background:var(--s4);border:1px solid var(--bdr);border-radius:8px 0 0 8px;font-size:12px;color:var(--muted);display:flex;align-items:center;white-space:nowrap;border-right:none}
+.input-pfx input{border-radius:0 8px 8px 0}
+.char-hint{font-size:11px;color:var(--dim);margin-top:3px}
+.trow{display:flex;gap:6px;flex-wrap:wrap}
+.tbtn{padding:7px 14px;border:1px solid var(--bdr);border-radius:20px;background:transparent;color:var(--muted);cursor:pointer;font-size:12px;font-weight:600;transition:all .15s}
+.tbtn.on{background:var(--blue);border-color:var(--blue);color:#fff}
+.tbtn:hover:not(.on){border-color:var(--bdr2);color:var(--text)}
+.swr{display:flex;align-items:center;justify-content:space-between;padding:9px 13px;background:var(--s3);border-radius:8px;border:1px solid var(--bdr);margin-bottom:9px}
+.sw{width:38px;height:21px;background:var(--s4);border-radius:11px;cursor:pointer;position:relative;transition:background .15s;border:1px solid var(--bdr);flex-shrink:0}
+.sw.on{background:var(--blue);border-color:var(--blue)}
+.sw::after{content:'';position:absolute;top:2px;right:2px;width:15px;height:15px;background:#fff;border-radius:50%;transition:transform .15s}
+.sw.on::after{transform:translateX(-17px)}
+.tag-wrap{background:var(--s3);border:1px solid var(--bdr);border-radius:8px;padding:6px 8px;display:flex;flex-wrap:wrap;gap:5px;min-height:38px;cursor:text;transition:border .15s}
+.tag-wrap:focus-within{border-color:var(--blue)}
+.tag{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:5px;font-size:11px;font-weight:600}
+.tag-b{background:rgba(59,110,245,.15);color:#7ab4f5}.tag-r{background:rgba(239,68,68,.1);color:#fca5a5}
+.tag input{border:none!important;background:transparent!important;outline:none;color:var(--text);font-size:12px;min-width:80px;padding:2px;width:auto}
+.tag-x{cursor:pointer;opacity:.5;font-size:10px}.tag-x:hover{opacity:1}
+.acc{background:var(--s2);border:1px solid var(--bdr);border-radius:10px;margin-bottom:8px;overflow:hidden}
+.acc-hd{padding:13px 16px;cursor:pointer;display:flex;align-items:center;justify-content:space-between;font-weight:600;font-size:13px;color:#fff;background:var(--s3);user-select:none}
+.acc-hd:hover{background:var(--s4)}
+.acc-body{padding:18px;display:none;border-top:1px solid var(--bdr)}.acc-body.open{display:block}
+.paused-pill{font-size:10px;padding:2px 8px;border-radius:4px;background:rgba(245,158,11,.12);color:var(--amber);font-weight:700;margin-right:8px}
+.info{background:rgba(59,110,245,.07);border:1px solid rgba(59,110,245,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:#7ab4f5;margin-bottom:12px;line-height:1.6}
+.warn{background:rgba(245,158,11,.07);border:1px solid rgba(245,158,11,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:#fcd34d;margin-bottom:12px}
+.note{font-size:11px;color:var(--dim);margin-top:3px;font-style:italic}
+.btn{padding:9px 22px;border-radius:9px;border:none;cursor:pointer;font-size:13px;font-weight:700;transition:all .15s;display:inline-flex;align-items:center;gap:7px}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.btn-primary{background:var(--blue);color:#fff}.btn-primary:hover:not(:disabled){background:var(--blue-d)}
+.btn-ghost{background:var(--s4);color:var(--text);border:1px solid var(--bdr)}.btn-ghost:hover{background:var(--s3)}
+.btn-green{background:var(--green);color:#fff}.btn-green:hover:not(:disabled){background:#16a34a}
+.btn-sm{padding:6px 13px;font-size:12px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spin{display:inline-block;width:13px;height:13px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .6s linear infinite}
+.nav-row{display:flex;justify-content:space-between;align-items:center;margin-top:22px;gap:10px}
+.counter-row{display:flex;align-items:center;gap:12px;margin-bottom:16px}
+.cnt-btn{width:32px;height:32px;border-radius:8px;border:1px solid var(--bdr);background:var(--s4);color:#fff;cursor:pointer;font-size:18px;display:flex;align-items:center;justify-content:center;font-weight:700;transition:all .15s}
+.cnt-btn:hover{background:var(--blue);border-color:var(--blue)}
+.cnt-val{font-size:17px;font-weight:700;color:#fff;min-width:28px;text-align:center}
+hr.dv{border:none;border-top:1px solid var(--bdr);margin:16px 0}
+.sec-ttl{font-size:11px;font-weight:700;color:var(--dim);text-transform:uppercase;letter-spacing:.7px;margin-bottom:10px}
+.stats-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:14px}
+.stat-c{background:var(--s3);border:1px solid var(--bdr);border-radius:9px;padding:13px;text-align:center}
+.stat-l{font-size:11px;color:var(--muted);margin-bottom:4px}.stat-v{font-size:14px;font-weight:700;color:#fff}
+.tree-wrap{background:var(--s3);border:1px solid var(--bdr);border-radius:9px;padding:15px;margin-bottom:12px}
+.tree-camp{font-weight:700;color:#fff;font-size:13px;margin-bottom:10px}
+.tree-adset{padding:6px 0 6px 16px;border-left:2px solid var(--blue);margin-bottom:6px}
+.tree-adset-name{font-size:12px;color:#7ab4f5;font-weight:600;margin-bottom:4px}
+.tree-ad{font-size:11px;color:var(--muted);padding:2px 12px}
+.brief-box{background:var(--s3);border:1px solid var(--bdr);border-radius:8px;padding:14px;font-size:11.5px;color:var(--text);font-family:'Courier New',monospace;white-space:pre-wrap;word-break:break-word;max-height:300px;overflow-y:auto;margin-bottom:12px;line-height:1.7}
+.utm-preview{background:var(--s4);border:1px solid var(--bdr);border-radius:6px;padding:8px 11px;font-size:11px;color:#7ab4f5;word-break:break-all;font-family:monospace;margin-top:6px;line-height:1.5}
+.loading-cell{display:flex;align-items:center;gap:9px;padding:10px;color:var(--muted);font-size:12px}
+.spinner-sm{width:15px;height:15px;border:2px solid var(--bdr);border-top-color:var(--blue);border-radius:50%;animation:spin .6s linear infinite;flex-shrink:0}
+.conn-bar{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:var(--s3);border:1px solid var(--bdr);border-radius:10px;margin-bottom:14px}
+.conn-bar-left{display:flex;align-items:center;gap:9px;font-size:13px;font-weight:600}
+.output-panel{background:linear-gradient(135deg,rgba(59,110,245,.05),rgba(167,139,250,.05));border:1px solid rgba(167,139,250,.25);border-radius:12px;padding:18px;margin-top:12px}
+.output-hd{display:flex;align-items:center;gap:9px;font-weight:700;font-size:13px;color:#c4b5fd;margin-bottom:12px}
+.output-body{font-size:13px;color:var(--text);line-height:1.75;white-space:pre-wrap}
+@keyframes dots{0%{content:'.'}33%{content:'..'}66%{content:'...'}}
+.thinking::after{content:'...';animation:dots 1.2s infinite}
+.cb-row{display:flex;flex-wrap:wrap;gap:7px}
+.cb-item{display:flex;align-items:center;gap:5px;cursor:pointer;padding:5px 11px;border:1px solid var(--bdr);border-radius:6px;font-size:12px;color:var(--muted);transition:all .15s;background:var(--s3)}
+.cb-item input{width:14px;height:14px;accent-color:var(--blue)}
+.cb-item:has(input:checked){border-color:var(--blue);color:var(--text);background:rgba(59,110,245,.08)}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="overlay" id="connModal">
+  <div class="modal">
+    <h2>Connect to Meta Ads</h2>
+    <p class="modal-sub">Choose your connection — both are already authenticated via your Claude session. No API key needed.</p>
+    <div class="conn-opts">
+      <div class="conn-opt sel" id="opt-meta" onclick="selectConn('meta')">
+        <div class="ico">🔵</div><h3>Meta MCP</h3>
+        <p>Direct via Meta's official MCP connector</p>
+      </div>
+      <div class="conn-opt" id="opt-composio" onclick="selectConn('composio')">
+        <div class="ico">⚡</div><h3>Composio</h3>
+        <p>Via Composio — already connected to your Claude session</p>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="confirmConn()">Connect</button>
+    </div>
+  </div>
+</div>
+<div class="header">
+  <div class="logo">f</div>
+  <div class="header-text"><h1>Meta Campaign Planner</h1><p>Build and launch Meta ad campaigns step by step</p></div>
+  <div class="header-right">
+    <div class="conn-badge idle" id="connBadge" onclick="openModal()">
+      <span class="dot dot-amber" id="connDot"></span>
+      <span id="connBadgeText">Click to connect</span>
+    </div>
+  </div>
+</div>
+<div class="steps" id="stepsNav">
+  <button class="sbtn active" onclick="goStep(1)"><span class="snum">1</span>Account</button>
+  <button class="sbtn" onclick="goStep(2)"><span class="snum">2</span>Campaign</button>
+  <button class="sbtn" onclick="goStep(3)"><span class="snum">3</span>Ad Sets</button>
+  <button class="sbtn" onclick="goStep(4)"><span class="snum">4</span>Ads</button>
+  <button class="sbtn" onclick="goStep(5)"><span class="snum">5</span>Launch</button>
+</div>
+<div id="step1">
+  <div class="card"><div class="card-hd"><span class="card-ico">🏢</span>Select Ad Account</div>
+    <div class="conn-bar" id="connBar">
+      <div class="conn-bar-left"><span class="dot dot-amber" id="barDot"></span><span id="barText">Not connected — click the badge above to start</span></div>
+      <button class="btn btn-ghost btn-sm" onclick="loadAccounts()">↻ Retry</button>
+    </div>
+    <div id="accountsLoading" class="loading-cell hidden"><div class="spinner-sm"></div> Loading ad accounts...</div>
+    <div id="accountsList" class="hidden">
+      <div class="field"><label>Ad Account</label>
+        <select id="selectedAccount" onchange="onAccountSelected()"><option value="">— Select account —</option></select>
+      </div>
+      <div id="accountDetails" class="hidden">
+        <div class="stats-grid" id="accountStats"></div>
+        <div class="info" id="accountInfo"></div>
+      </div>
+    </div>
+  </div>
+  <div class="nav-row"><span></span><button class="btn btn-primary" id="step1Next" onclick="goStep(2)" disabled>Next: Campaign Setup →</button></div>
+</div>
+<div id="step2" class="hidden">
+  <div class="card"><div class="card-hd"><span class="card-ico">📢</span>Campaign Settings</div>
+    <div class="field"><label>Campaign Name</label><input type="text" id="campName" placeholder="e.g. Summer Sale 2025"></div>
+    <div class="field"><label>Objective</label>
+      <div class="trow" id="objRow">
+        <button class="tbtn on" data-v="OUTCOME_SALES">SALES</button>
+        <button class="tbtn" data-v="OUTCOME_LEADS">LEADS</button>
+        <button class="tbtn" data-v="OUTCOME_TRAFFIC">TRAFFIC</button>
+        <button class="tbtn" data-v="OUTCOME_AWARENESS">AWARENESS</button>
+        <button class="tbtn" data-v="OUTCOME_ENGAGEMENT">ENGAGEMENT</button>
+        <button class="tbtn" data-v="OUTCOME_APP_PROMOTION">APP PROMO</button>
+      </div>
+    </div>
+    <div class="field"><label>Budget Type</label>
+      <div class="trow" id="budgetTypeRow">
+        <button class="tbtn on" data-v="CBO">CBO — Campaign Budget</button>
+        <button class="tbtn" data-v="ABO">ABO — Ad Set Budget</button>
+      </div>
+    </div>
+    <div id="cboFields">
+      <div class="row3">
+        <div class="field"><label>Currency</label>
+          <select id="campCurrency" onchange="onCurrencyChange()">
+            <option>USD</option><option>EGP</option><option>AED</option><option>SAR</option><option>EUR</option><option>GBP</option><option>KWD</option>
+          </select>
+        </div>
+        <div class="field"><label>Budget Period</label>
+          <div class="trow" id="budgetPeriodRow"><button class="tbtn on" data-v="Daily">Daily</button><button class="tbtn" data-v="Lifetime">Lifetime</button></div>
+        </div>
+        <div class="field"><label>Budget Amount</label>
+          <div class="input-pfx"><span class="pfx" id="budgCurrBadge">USD</span><input type="number" id="campBudget" placeholder="0.00" min="0" step="0.01"></div>
+        </div>
+      </div>
+    </div>
+    <div id="aboNote" class="info hidden">ℹ️ Budget will be set per Ad Set in the next step.</div>
+    <hr class="dv">
+    <div class="field"><label>Bid Strategy</label>
+      <select id="bidStrategy" onchange="updateBidFields()">
+        <option value="LOWEST_COST_WITHOUT_CAP">Lowest Cost (no cap)</option>
+        <option value="LOWEST_COST_WITH_BID_CAP">Bid Cap</option>
+        <option value="COST_CAP">Cost Cap</option>
+        <option value="MINIMUM_ROAS">Minimum ROAS</option>
+      </select>
+    </div>
+    <div id="bidAmountField" class="field hidden"><label>Bid / Cost Amount</label>
+      <div class="input-pfx"><span class="pfx" id="bidCurrBadge">USD</span><input type="number" id="bidAmount" placeholder="0.00" min="0" step="0.01"></div>
+    </div>
+    <div id="roasField" class="field hidden"><label>ROAS Target</label>
+      <div class="input-pfx"><span class="pfx">x</span><input type="number" id="roasVal" placeholder="2.5" min="0" step="0.1"></div>
+    </div>
+  </div>
+  <div class="nav-row"><button class="btn btn-ghost" onclick="goStep(1)">← Back</button><button class="btn btn-primary" onclick="goStep(3)">Next: Ad Sets →</button></div>
+</div>
+<div id="step3" class="hidden">
+  <div class="card"><div class="card-hd"><span class="card-ico">🎯</span>Number of Ad Sets</div>
+    <div class="counter-row">
+      <button class="cnt-btn" onclick="changeCount('adsets',-1)">−</button>
+      <span class="cnt-val" id="adsetsCount">1</span>
+      <button class="cnt-btn" onclick="changeCount('adsets',1)">+</button>
+      <span style="color:var(--muted);font-size:12px">1 — 8</span>
+    </div>
+  </div>
+  <div id="adSetsContainer"></div>
+  <div class="nav-row"><button class="btn btn-ghost" onclick="goStep(2)">← Back</button><button class="btn btn-primary" onclick="goStep(4)">Next: Ads →</button></div>
+</div>
+<div id="step4" class="hidden">
+  <div class="card"><div class="card-hd"><span class="card-ico">🖼</span>Ads per Ad Set</div>
+    <div class="counter-row">
+      <button class="cnt-btn" onclick="changeCount('ads',-1)">−</button>
+      <span class="cnt-val" id="adsCount">1</span>
+      <button class="cnt-btn" onclick="changeCount('ads',1)">+</button>
+      <span style="color:var(--muted);font-size:12px">1 — 8</span>
+    </div>
+  </div>
+  <div id="adsContainer"></div>
+  <div class="nav-row"><button class="btn btn-ghost" onclick="goStep(3)">← Back</button><button class="btn btn-primary" onclick="goStep(5)">Next: Review & Launch →</button></div>
+</div>
+<div id="step5" class="hidden">
+  <div class="card"><div class="card-hd"><span class="card-ico">📊</span>Campaign Summary</div>
+    <div class="stats-grid" id="summaryStats"></div>
+    <div class="tree-wrap" id="summaryTree"></div>
+  </div>
+  <div class="card"><div class="card-hd"><span class="card-ico">📋</span>Campaign Brief</div>
+    <div class="brief-box" id="briefBox"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:8px">
+      <button class="btn btn-ghost btn-sm" onclick="copyBrief()">📋 Copy Brief</button>
+      <button class="btn btn-ghost btn-sm" onclick="openInClaude()">↗ Open in Claude.ai</button>
+    </div>
+  </div>
+  <div class="card"><div class="card-hd"><span class="card-ico">🚀</span>Send to n8n → Telegram Approval → Meta</div>
+    <div class="info">Claude will read the brief and create the full campaign in your Meta account in <strong>PAUSED</strong> status.</div>
+    <div id="connectorNote" class="warn hidden"></div>
+    <button class="btn btn-green" id="createBtn" onclick="createCampaign()" style="width:100%;justify-content:center;padding:14px;font-size:14px">🚀 Create Campaign in Meta</button>
+  </div>
+  <div id="outputPanel" class="output-panel hidden">
+    <div class="output-hd" id="outputHd">📤 Sending to n8n...</div>
+    <div class="output-body" id="outputBody"></div>
+  </div>
+  <div class="nav-row"><button class="btn btn-ghost" onclick="goStep(4)">← Back</button><span></span></div>
+</div>
+</div>
+<script>
+const APP={step:1,connector:'meta',account:null,accountData:{},adsetsCount:1,adsCount:1};
+const PERF_GOALS={OUTCOME_SALES:['Maximize Conversions','Maximize Conversion Value','Maximize Link Clicks','Maximize Landing Page Views','Maximize Reach'],OUTCOME_LEADS:['Maximize Leads','Maximize Conversions','Maximize Link Clicks','Maximize Reach'],OUTCOME_TRAFFIC:['Maximize Link Clicks','Maximize Landing Page Views','Maximize Reach','Maximize Impressions'],OUTCOME_AWARENESS:['Maximize Reach','Maximize Impressions','Maximize ThruPlay','Maximize 2-Second Views'],OUTCOME_ENGAGEMENT:['Maximize Post Engagement','Maximize ThruPlay','Maximize Reach'],OUTCOME_APP_PROMOTION:['Maximize App Installs','Maximize App Events','Maximize Link Clicks']};
+const CTAS=['Shop Now','Learn More','Sign Up','Book Now','Contact Us','Get Offer','Watch More','Send Message','Subscribe','Download','Get Quote','Apply Now'];
+const q=id=>document.getElementById(id);
+const val=id=>q(id)?q(id).value.trim():'';
+const show=id=>q(id)?.classList.remove('hidden');
+const hide=id=>q(id)?.classList.add('hidden');
+const swOn=id=>q(id)?.classList.contains('on');
+function getTV(id){return q(id)?.querySelector('.tbtn.on')?.dataset.v||'';}
+function makeToggle(id,cb){q(id)?.querySelectorAll('.tbtn').forEach(b=>{b.onclick=()=>{q(id).querySelectorAll('.tbtn').forEach(x=>x.classList.remove('on'));b.classList.add('on');cb?.();};});}
+function toggleSw(id){q(id)?.classList.toggle('on');}
+function pad(s,n=22){return String(s).padEnd(n,' ');}
+function addTag(wrap,txt,cls='tag-b'){if(!txt||!wrap)return;const inp=wrap.querySelector('input');const t=document.createElement('span');t.className='tag '+cls;t.innerHTML=txt+' <span class="tag-x" onclick="this.parentNode.remove()">x</span>';wrap.insertBefore(t,inp);}
+function getTags(id){return [...(q(id)?.querySelectorAll('.tag')||[])].map(t=>t.textContent.replace('x','').trim()).filter(Boolean);}
+function makeTagInput(id,cls='tag-b'){const w=q(id);if(!w)return;let inp=w.querySelector('input');if(!inp){inp=document.createElement('input');inp.placeholder='Type and press Enter';w.appendChild(inp);}inp.onkeydown=e=>{if(e.key==='Enter'||e.key===','){e.preventDefault();const v=inp.value.trim();if(v){addTag(w,v,cls);inp.value='';}}if(e.key==='Backspace'&&!inp.value){const ts=w.querySelectorAll('.tag');if(ts.length)ts[ts.length-1].remove();}};w.onclick=()=>inp.focus();}
+function openModal(){show('connModal');}
+function closeModal(){hide('connModal');}
+function selectConn(type){APP.connector=type;q('opt-meta').classList.toggle('sel',type==='meta');q('opt-composio').classList.toggle('sel',type==='composio');}
+function confirmConn(){closeModal();setBadge('connecting');loadAccounts();}
+function setBadge(state,label=''){const badge=q('connBadge'),dot=q('connDot'),txt=q('connBadgeText');badge.className='conn-badge '+(state==='ok'?'ok':state==='err'?'err':'idle');dot.className='dot '+(state==='ok'?'dot-green':state==='err'?'dot-red':'dot-amber');txt.textContent=label||(state==='ok'?'Connected':state==='err'?'Error':'Connecting...');}
+async function callClaude(messages,sys=''){
+  const mcpServers=APP.connector==='meta'?[{type:'url',url:'https://mcp.facebook.com/ads',name:'meta-ads'}]:[{type:'url',url:'https://connect.composio.dev/mcp',name:'composio'}];
+  const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys||'You are a helpful Meta Ads assistant.',messages,mcp_servers:mcpServers})});
+  if(!resp.ok)throw new Error('API '+resp.status);
+  return resp.json();
+}
+function parseJ(data){const txt=data.content.filter(b=>b.type==='text').map(b=>b.text).join('');const tr=data.content.filter(b=>b.type==='mcp_tool_result');let raw=tr.length?(tr[tr.length-1].content?.[0]?.text||''):txt;if(!raw)raw=txt;const c=raw.replace(/```json|```/g,'').trim();const i=c.indexOf('{'),ai=c.indexOf('[');const s=i>=0&&(ai<0||i<ai)?i:ai>=0?ai:0;return JSON.parse(c.substring(s));}
+async function loadAccounts(){show('accountsLoading');hide('accountsList');q('barDot').className='dot dot-amber';q('barText').textContent='Connecting to Meta...';try{const data=await callClaude([{role:'user',content:'List all my Meta ad accounts. Return ONLY JSON: {"accounts":[{"id":"act_123","name":"My Account","currency":"USD","status":"ACTIVE"}]}'}]);const parsed=parseJ(data);const accounts=parsed.accounts||parsed.data||(Array.isArray(parsed)?parsed:[]);if(!accounts.length)throw new Error('No accounts found');const sel=q('selectedAccount');sel.innerHTML='<option value="">— Select account —</option>';accounts.forEach(a=>{const o=document.createElement('option');o.value=a.id||a.account_id;o.textContent=(a.name||a.account_name)+' ('+(a.id||a.account_id)+')';o.dataset.info=JSON.stringify(a);sel.appendChild(o);});hide('accountsLoading');show('accountsList');q('barDot').className='dot dot-green';q('barText').textContent='✓ '+accounts.length+' account(s) loaded';setBadge('ok',APP.connector==='meta'?'Meta MCP':'Composio');}catch(err){q('accountsLoading').innerHTML='<span style="color:var(--red)">⚠️ '+err.message+' — Check your connection and retry</span>';q('barDot').className='dot dot-red';q('barText').textContent='Connection failed';setBadge('err','Failed');}}
+async function onAccountSelected(){const sel=q('selectedAccount');const opt=sel.options[sel.selectedIndex];if(!opt.value){hide('accountDetails');q('step1Next').disabled=true;return;}APP.account={id:opt.value,name:opt.text};q('step1Next').disabled=false;show('accountDetails');q('accountStats').innerHTML='<div class="stat-c"><div class="stat-l">Account ID</div><div class="stat-v" style="font-size:11px">'+opt.value+'</div></div><div class="stat-c"><div class="stat-l">Status</div><div class="stat-v" style="color:var(--green);font-size:12px">✓ ACTIVE</div></div><div class="stat-c"><div class="stat-l">Loading</div><div class="stat-v"><div class="spinner-sm" style="margin:auto"></div></div></div><div class="stat-c"></div>';q('accountInfo').textContent='Loading pages, pixels, and catalogs...';await loadAssets(opt.value);}
+async function loadAssets(accountId){try{const data=await callClaude([{role:'user',content:'For Meta ad account '+accountId+', get: Facebook Pages (id, name), Instagram accounts (id, username), Pixels (id, name), Catalogs (id, name). Return ONLY JSON: {"pages":[{"id":"123","name":"My Page"}],"instagram_accounts":[{"id":"456","username":"@page"}],"pixels":[{"id":"789","name":"My Pixel"}],"catalogs":[]}'}]);const p=parseJ(data);APP.accountData=p;q('accountStats').innerHTML='<div class="stat-c"><div class="stat-l">Pages</div><div class="stat-v">'+(p.pages||[]).length+'</div></div><div class="stat-c"><div class="stat-l">Instagram</div><div class="stat-v">'+(p.instagram_accounts||[]).length+'</div></div><div class="stat-c"><div class="stat-l">Pixels</div><div class="stat-v">'+(p.pixels||[]).length+'</div></div><div class="stat-c"><div class="stat-l">Catalogs</div><div class="stat-v">'+(p.catalogs||[]).length+'</div></div>';q('accountInfo').textContent='✓ Account assets loaded. Proceed to campaign setup.';if(p.currency){const c=q('campCurrency');[...c.options].forEach(o=>{if(o.value===p.currency)o.selected=true;});onCurrencyChange();}}catch(e){APP.accountData={pages:[],instagram_accounts:[],pixels:[{id:'default',name:'Account Default Pixel'}],catalogs:[]};q('accountInfo').textContent='⚠️ Partial data loaded — defaults will be used.';}}
+function initStep2(){makeToggle('objRow');makeToggle('budgetTypeRow',()=>{const bt=getTV('budgetTypeRow');bt==='CBO'?(show('cboFields'),hide('aboNote')):(hide('cboFields'),show('aboNote'));});makeToggle('budgetPeriodRow');}
+function updateBidFields(){const bs=val('bidStrategy');if(['LOWEST_COST_WITH_BID_CAP','COST_CAP'].includes(bs)){show('bidAmountField');hide('roasField');}else if(bs==='MINIMUM_ROAS'){hide('bidAmountField');show('roasField');}else{hide('bidAmountField');hide('roasField');}}
+function onCurrencyChange(){const c=val('campCurrency')||'USD';q('budgCurrBadge').textContent=c;q('bidCurrBadge').textContent=c;}
+function buildAdSetHTML(i){const obj=getTV('objRow')||'OUTCOME_SALES';const goals=PERF_GOALS[obj]||PERF_GOALS.OUTCOME_SALES;const isABO=getTV('budgetTypeRow')==='ABO';const curr=val('campCurrency')||'USD';const pixels=APP.accountData.pixels||[];const pixelOpts='<option value="account_default">Account Default Pixel</option>'+pixels.map(p=>'<option value="'+p.id+'">'+( p.name||p.id)+'</option>').join('')+'<option value="custom">Enter manually...</option>';return '<div class="acc" id="as-acc-'+i+'"><div class="acc-hd" onclick="toggleAcc('as-body-'+i+'','as-arr-'+i+'')"><span><span class="paused-pill">PAUSED</span>Ad Set '+(i+1)+': <span id="as-lbl-'+i+'">Ad Set '+(i+1)+'</span></span><span id="as-arr-'+i+'">'+(i===0?'▲':'▼')+'</span></div><div class="acc-body '+(i===0?'open':'')+'" id="as-body-'+i+'"><div class="field"><label>Ad Set Name</label><input type="text" id="as-name-'+i+'" placeholder="Ad Set '+(i+1)+'" oninput="q('as-lbl-'+i+'').textContent=this.value||'Ad Set '+(i+1)+''"></div><hr class="dv"><div class="sec-ttl">Conversion Setup</div><div class="row2"><div class="field"><label>Conversion Location</label><select id="as-loc-'+i+'" onchange="updateConvFields('+i+')"><option>Website</option><option>App</option><option>Messenger</option><option>WhatsApp</option><option>Instagram</option><option>Calls</option><option>Lead Form</option></select></div><div class="field"><label>Performance Goal</label><select id="as-goal-'+i+'">'+goals.map(g=>'<option>'+g+'</option>').join('')+'</select></div></div><div id="as-pixel-section-'+i+'"><div class="row2"><div class="field"><label>Dataset / Pixel</label><select id="as-pixel-sel-'+i+'" onchange="toggleCustomPixel('+i+')">'+pixelOpts+'</select></div><div class="field" id="as-pixel-custom-wrap-'+i+'" style="display:none"><label>Pixel ID (manual)</label><input type="text" id="as-pixel-custom-'+i+'" placeholder="123456789"></div><div class="field"><label>Conversion Event</label><select id="as-convevent-'+i+'"><option>Purchase</option><option>Add To Cart</option><option>Initiate Checkout</option><option>Lead</option><option>Complete Registration</option><option>View Content</option><option>Search</option><option>Subscribe</option><option>Contact</option></select></div></div></div><div class="row2"><div class="field"><label>Cost Per Result Goal (optional)</label><div class="input-pfx"><span class="pfx">'+curr+'</span><input type="number" id="as-cprg-'+i+'" placeholder="0.00" min="0" step="0.01"></div></div><div class="field"><label>Attribution Window</label><select id="as-attrib-'+i+'"><option>7-day click + 1-day view</option><option>1-day click</option><option>7-day click</option><option>1-day click + 1-day view</option></select></div></div>'+(isABO?'<hr class="dv"><div class="sec-ttl">Budget (ABO)</div><div class="row2"><div class="field"><label>Budget Period</label><div class="trow" id="as-budp-'+i+'"><button class="tbtn on" data-v="Daily">Daily</button><button class="tbtn" data-v="Lifetime">Lifetime</button></div></div><div class="field"><label>Budget Amount</label><div class="input-pfx"><span class="pfx">'+curr+'</span><input type="number" id="as-budget-'+i+'" placeholder="0.00" min="0" step="0.01"></div></div></div>':'')+'<hr class="dv"><div class="sec-ttl">Schedule</div><div class="row3"><div class="field"><label>Start Date</label><input type="date" id="as-sd-'+i+'"></div><div class="field"><label>Start Time</label><input type="time" id="as-st-'+i+'"></div><div class="field"><label>End Date (optional)</label><input type="date" id="as-ed-'+i+'"></div></div><hr class="dv"><div class="sec-ttl">Audience</div><div class="field"><label>Locations</label><input type="text" id="as-audloc-'+i+'" placeholder="United States, United Kingdom..."></div><div class="row3"><div class="field"><label>Age Min</label><select id="as-agemin-'+i+'">'+Array.from({length:53},(_,k)=>k+13).map(a=>'<option '+(a===18?'selected':'')+'>'+a+'</option>').join('')+'</select></div><div class="field"><label>Age Max</label><select id="as-agemax-'+i+'">'+Array.from({length:47},(_,k)=>k+19).map(a=>'<option '+(a===65?'selected':'')+'>'+a+'</option>').join('')+'<option>65+</option></select></div><div class="field"><label>Gender</label><select id="as-gender-'+i+'"><option>All</option><option>Male</option><option>Female</option></select></div></div><div class="field"><label>Languages</label><div class="trow" style="margin-bottom:7px"><button class="tbtn" onclick="addTag(q('as-langs-'+i+''),'English','tag-b')">English</button><button class="tbtn" onclick="addTag(q('as-langs-'+i+''),'Arabic','tag-b')">Arabic</button></div><div class="tag-wrap" id="as-langs-'+i+'"><input type="text" id="as-lang-inp-'+i+'" placeholder="Type language + Enter" onkeydown="if(event.key==='Enter'){addTag(q('as-langs-'+i+''),this.value,'tag-b');this.value='';}"></div></div><div class="field"><label>Detailed Targeting</label><div class="tag-wrap" id="as-detail-'+i+'"></div></div><div class="field"><label>Custom Audiences</label><div class="tag-wrap" id="as-custom-'+i+'"></div></div><div class="field"><label>Exclude Audiences</label><div class="tag-wrap" id="as-excl-'+i+'"></div></div><div class="swr"><span>Advantage+ Audience</span><div class="sw" id="as-aplus-'+i+'" onclick="toggleSw('as-aplus-'+i+'')"></div></div><hr class="dv"><div class="sec-ttl">Placements</div><div class="swr"><span>Advantage+ Placements</span><div class="sw on" id="as-advpl-'+i+'" onclick="toggleSw('as-advpl-'+i+'');updatePlacement('+i+')"></div></div><div id="as-manual-'+i+'" class="hidden"><div class="cb-row" id="as-platforms-'+i+'"><label class="cb-item"><input type="checkbox" value="Facebook"> Facebook</label><label class="cb-item"><input type="checkbox" value="Instagram"> Instagram</label><label class="cb-item"><input type="checkbox" value="Messenger"> Messenger</label><label class="cb-item"><input type="checkbox" value="Audience Network"> Audience Network</label><label class="cb-item"><input type="checkbox" value="WhatsApp"> WhatsApp</label></div></div><div class="swr"><span>Exclude Skippable In-Stream Ads</span><div class="sw" id="as-skip-'+i+'" onclick="toggleSw('as-skip-'+i+'')"></div></div></div></div>';}
+function toggleAcc(bodyId,arrId){const b=q(bodyId);if(!b)return;const open=b.classList.toggle('open');const a=q(arrId);if(a)a.textContent=open?'▲':'▼';}
+function toggleCustomPixel(i){const s=q('as-pixel-sel-'+i),w=q('as-pixel-custom-wrap-'+i);if(s&&w)w.style.display=s.value==='custom'?'block':'none';}
+function updateConvFields(i){const loc=q('as-loc-'+i)?.value||'Website';const s=q('as-pixel-section-'+i);if(s)s.style.display=['Website','App','Lead Form'].includes(loc)?'block':'none';}
+function updatePlacement(i){q('as-manual-'+i)?.classList.toggle('hidden',swOn('as-advpl-'+i));}
+function rebuildAdSets(){const cont=q('adSetsContainer');cont.innerHTML='';for(let i=0;i<APP.adsetsCount;i++)cont.insertAdjacentHTML('beforeend',buildAdSetHTML(i));for(let i=0;i<APP.adsetsCount;i++){makeTagInput('as-detail-'+i);makeTagInput('as-custom-'+i);makeTagInput('as-excl-'+i,'tag-r');if(q('as-budp-'+i))makeToggle('as-budp-'+i);updateConvFields(i);}}
+function buildAdHTML(asi,ai){const pages=APP.accountData.pages||[];const igs=APP.accountData.instagram_accounts||[];const cats=APP.accountData.catalogs||[];const pageOpts='<option value="account_default">Account Default Page</option>'+pages.map(p=>'<option value="'+p.id+'">'+(p.name||p.id)+'</option>').join('');const igOpts='<option value="account_default">Account Default Instagram</option>'+igs.map(p=>'<option value="'+p.id+'">'+(p.username||p.id)+'</option>').join('');const catOpts='<option value="">— None —</option>'+cats.map(c=>'<option value="'+c.id+'">'+(c.name||c.id)+'</option>').join('');const curr=val('campCurrency')||'USD';return '<div class="acc" id="ad-acc-'+asi+'-'+ai+'"><div class="acc-hd" onclick="toggleAcc('ad-body-'+asi+'-'+ai+'','ad-arr-'+asi+'-'+ai+'')"><span><span class="paused-pill">PAUSED</span>Ad '+(ai+1)+': <span id="ad-lbl-'+asi+'-'+ai+'">Ad '+(ai+1)+'</span></span><span id="ad-arr-'+asi+'-'+ai+'">'+(ai===0?'▲':'▼')+'</span></div><div class="acc-body '+(ai===0?'open':'')+'" id="ad-body-'+asi+'-'+ai+'"><div class="field"><label>Ad Name</label><input type="text" id="ad-name-'+asi+'-'+ai+'" placeholder="Ad '+(ai+1)+'" oninput="q('ad-lbl-'+asi+'-'+ai+'').textContent=this.value||'Ad '+(ai+1)+''"></div><hr class="dv"><div class="sec-ttl">Identity</div><div class="row2"><div class="field"><label>Facebook Page</label><select id="ad-page-'+asi+'-'+ai+'">'+pageOpts+'</select></div><div class="field"><label>Instagram Profile</label><select id="ad-ig-'+asi+'-'+ai+'">'+igOpts+'</select></div></div><hr class="dv"><div class="sec-ttl">Creation Type</div><div class="trow" id="ad-crtype-'+asi+'-'+ai+'"><button class="tbtn on" data-v="create">Create New Ad</button><button class="tbtn" data-v="existing">Use Existing Post</button></div><div id="ad-existing-'+asi+'-'+ai+'" class="field hidden" style="margin-top:10px"><label>Post ID / URL</label><input type="text" id="ad-postid-'+asi+'-'+ai+'" placeholder="https://..."></div><div id="ad-new-'+asi+'-'+ai+'"><hr class="dv"><div class="row2"><div class="field"><label>Ad Format</label><select id="ad-fmt-'+asi+'-'+ai+'" onchange="updateAdFormat('+asi+','+ai+')"><option>Single Image / Video</option><option>Carousel</option><option>Catalog Carousel</option><option>Collection</option><option>Story / Reel</option></select></div><div class="field"><label>Schedule Date (optional)</label><input type="date" id="ad-sd-'+asi+'-'+ai+'"></div></div><hr class="dv"><div class="sec-ttl">Destination</div><div class="row2"><div class="field"><label>Website URL</label><input type="text" id="ad-url-'+asi+'-'+ai+'" placeholder="https://..." oninput="updateUTM('+asi+','+ai+')"></div><div class="field"><label>Display URL (optional)</label><input type="text" id="ad-durl-'+asi+'-'+ai+'" placeholder="example.com"></div></div><div id="ad-catalog-section-'+asi+'-'+ai+'" class="hidden"><hr class="dv"><div class="sec-ttl">Catalog</div><div class="row2"><div class="field"><label>Catalog</label><select id="ad-catalog-'+asi+'-'+ai+'">'+catOpts+'</select></div><div class="field"><label>Product Set</label><select id="ad-prodset-'+asi+'-'+ai+'"><option value="all">All Products</option></select></div></div></div><hr class="dv"><div class="swr"><span>Advantage+ Creative</span><div class="sw on" id="ad-advcr-'+asi+'-'+ai+'" onclick="toggleSw('ad-advcr-'+asi+'-'+ai+'')"></div></div><hr class="dv"><div class="sec-ttl">Creative Content</div><div id="ad-creative-'+asi+'-'+ai+'"></div><hr class="dv"><div class="field"><label>Call to Action</label><select id="ad-cta-'+asi+'-'+ai+'">'+CTAS.map(c=>'<option>'+c+'</option>').join('')+'</select></div><hr class="dv"><div class="sec-ttl">Tracking & UTM</div><div class="swr"><span>Enable Tracking / UTM</span><div class="sw on" id="ad-trk-'+asi+'-'+ai+'" onclick="toggleSw('ad-trk-'+asi+'-'+ai+'');toggleUTM('+asi+','+ai+')"></div></div><div id="ad-utm-wrap-'+asi+'-'+ai+'"><div class="row2"><div class="field"><label>UTM Source</label><select id="ad-utm-src-'+asi+'-'+ai+'" onchange="updateUTM('+asi+','+ai+')"><option value="{{site_source_name}}">Dynamic</option><option value="facebook">facebook</option><option value="instagram">instagram</option><option value="messenger">messenger</option></select></div><div class="field"><label>UTM Medium</label><select id="ad-utm-med-'+asi+'-'+ai+'" onchange="updateUTM('+asi+','+ai+')"><option value="paid_social">paid_social</option><option value="cpc">cpc</option><option value="social">social</option></select></div></div><div class="row2"><div class="field"><label>UTM Campaign</label><input type="text" id="ad-utm-camp-'+asi+'-'+ai+'" value="{{campaign.id}}" oninput="updateUTM('+asi+','+ai+')"></div><div class="field"><label>UTM Content</label><input type="text" id="ad-utm-cont-'+asi+'-'+ai+'" value="{{ad.id}}" oninput="updateUTM('+asi+','+ai+')"></div></div><div class="field"><label>UTM Preview</label><div class="utm-preview" id="ad-utm-prev-'+asi+'-'+ai+'">Enter a destination URL above to preview</div></div></div></div></div></div>';}
+function updateAdFormat(asi,ai){const fmt=q('ad-fmt-'+asi+'-'+ai)?.value||'';q('ad-catalog-section-'+asi+'-'+ai)?.classList.toggle('hidden',!['Catalog Carousel','Collection'].includes(fmt));const cr=q('ad-creative-'+asi+'-'+ai);if(!cr)return;if(fmt==='Carousel'){cr.innerHTML='<div class="field"><label>Primary Text</label><textarea id="ad-pt-'+asi+'-'+ai+'" placeholder="Up to 125 chars recommended"></textarea></div>'+[0,1,2].map(ci=>'<div style="background:var(--s3);border:1px solid var(--bdr);border-radius:8px;padding:12px;margin-bottom:8px"><div class="sec-ttl">Card '+(ci+1)+'</div><div class="row2"><div class="field"><label>Media URL</label><input type="text" id="ad-c'+ci+'-m-'+asi+'-'+ai+'"></div><div class="field"><label>Card URL</label><input type="text" id="ad-c'+ci+'-u-'+asi+'-'+ai+'"></div></div><div class="row2"><div class="field"><label>Headline</label><input type="text" id="ad-c'+ci+'-h-'+asi+'-'+ai+'"></div><div class="field"><label>Description</label><input type="text" id="ad-c'+ci+'-d-'+asi+'-'+ai+'"></div></div></div>').join('');}else{cr.innerHTML='<div class="field"><label>Media URL</label><input type="text" id="ad-media-'+asi+'-'+ai+'" placeholder="https://..."></div><div class="field"><label>Primary Text</label><textarea id="ad-pt-'+asi+'-'+ai+'" placeholder="Up to 125 chars" oninput="let c=q('ad-pt-cc-'+asi+'-'+ai+'');if(c)c.textContent=this.value.length+' / 125'"></textarea><div class="char-hint" id="ad-pt-cc-'+asi+'-'+ai+'">0 / 125</div></div><div class="row2"><div class="field"><label>Headline (max 40)</label><input type="text" id="ad-hl-'+asi+'-'+ai+'" maxlength="40" oninput="let c=q('ad-hl-cc-'+asi+'-'+ai+'');if(c)c.textContent=this.value.length+' / 40'"><div class="char-hint" id="ad-hl-cc-'+asi+'-'+ai+'">0 / 40</div></div><div class="field"><label>Description (max 30)</label><input type="text" id="ad-desc-'+asi+'-'+ai+'" maxlength="30" oninput="let c=q('ad-desc-cc-'+asi+'-'+ai+'');if(c)c.textContent=this.value.length+' / 30'"><div class="char-hint" id="ad-desc-cc-'+asi+'-'+ai+'">0 / 30</div></div></div>';}}
+function toggleUTM(asi,ai){q('ad-utm-wrap-'+asi+'-'+ai)?.classList.toggle('hidden',!swOn('ad-trk-'+asi+'-'+ai));}
+function updateUTM(asi,ai){const base=q('ad-url-'+asi+'-'+ai)?.value.trim()||'';const prev=q('ad-utm-prev-'+asi+'-'+ai);if(!prev)return;if(!base){prev.textContent='Enter a destination URL above to preview';return;}const src=q('ad-utm-src-'+asi+'-'+ai)?.value||'';const med=q('ad-utm-med-'+asi+'-'+ai)?.value||'';const camp=q('ad-utm-camp-'+asi+'-'+ai)?.value||'';const cont=q('ad-utm-cont-'+asi+'-'+ai)?.value||'';prev.textContent=base+(base.includes('?')?'&':'?')+'utm_source='+src+'&utm_medium='+med+'&utm_campaign='+camp+'&utm_content='+cont;}
+function rebuildAds(){const cont=q('adsContainer');cont.innerHTML='';for(let i=0;i<APP.adsetsCount;i++){const asName=q('as-name-'+i)?.value||'Ad Set '+(i+1);cont.insertAdjacentHTML('beforeend','<div style="background:var(--s3);border:1px solid var(--bdr);border-radius:8px;padding:10px 14px;margin-bottom:8px;font-weight:700;font-size:13px;color:#fff">📦 '+asName+'</div>');for(let j=0;j<APP.adsCount;j++)cont.insertAdjacentHTML('beforeend',buildAdHTML(i,j));}for(let i=0;i<APP.adsetsCount;i++)for(let j=0;j<APP.adsCount;j++){makeToggle('ad-crtype-'+i+'-'+j,()=>{const v=getTV('ad-crtype-'+i+'-'+j);q('ad-existing-'+i+'-'+j)?.classList.toggle('hidden',v!=='existing');q('ad-new-'+i+'-'+j)?.classList.toggle('hidden',v==='existing');});updateAdFormat(i,j);}}
+function goStep(n){if(n===3)rebuildAdSets();if(n===4)rebuildAds();if(n===5)buildSummary();[1,2,3,4,5].forEach(i=>q('step'+i)?.classList.toggle('hidden',i!==n));APP.step=n;q('stepsNav').querySelectorAll('.sbtn').forEach((b,i)=>{b.classList.toggle('active',i+1===n);b.classList.toggle('done',i+1<n);});window.scrollTo({top:0,behavior:'smooth'});}
+function changeCount(type,d){if(type==='adsets'){APP.adsetsCount=Math.max(1,Math.min(8,APP.adsetsCount+d));q('adsetsCount').textContent=APP.adsetsCount;rebuildAdSets();}else{APP.adsCount=Math.max(1,Math.min(8,APP.adsCount+d));q('adsCount').textContent=APP.adsCount;rebuildAds();}}
+function getAsData(i){const ps=q('as-pixel-sel-'+i)?.value||'account_default';return {name:val('as-name-'+i)||'Ad Set '+(i+1),convLoc:q('as-loc-'+i)?.value||'',perfGoal:q('as-goal-'+i)?.value||'',pixel:ps==='custom'?val('as-pixel-custom-'+i):ps==='account_default'?'Account Default':ps,convEvent:q('as-convevent-'+i)?.value||'',cprg:val('as-cprg-'+i),attrib:q('as-attrib-'+i)?.value||'',budPeriod:getTV('as-budp-'+i)||'Daily',budget:val('as-budget-'+i),sd:val('as-sd-'+i),st:val('as-st-'+i),ed:val('as-ed-'+i),loc:val('as-audloc-'+i),ageMin:q('as-agemin-'+i)?.value||'18',ageMax:q('as-agemax-'+i)?.value||'65',gender:q('as-gender-'+i)?.value||'All',langs:getTags('as-langs-'+i).join(', '),detail:getTags('as-detail-'+i).join(', '),custom:getTags('as-custom-'+i).join(', '),excl:getTags('as-excl-'+i).join(', '),aplusAud:swOn('as-aplus-'+i)?'ON':'OFF',placement:swOn('as-advpl-'+i)?'Advantage+':'Manual',platforms:[...(q('as-platforms-'+i)?.querySelectorAll('input:checked')||[])].map(c=>c.value).join(', '),skip:swOn('as-skip-'+i)?'YES':'NO'};}
+function getAdData(asi,ai){const fmt=q('ad-fmt-'+asi+'-'+ai)?.value||'Single Image / Video';const crType=getTV('ad-crtype-'+asi+'-'+ai)||'create';const trackOn=swOn('ad-trk-'+asi+'-'+ai);let utmUrl='';if(trackOn){const base=val('ad-url-'+asi+'-'+ai);if(base){const src=q('ad-utm-src-'+asi+'-'+ai)?.value||'';const med=q('ad-utm-med-'+asi+'-'+ai)?.value||'';const camp=q('ad-utm-camp-'+asi+'-'+ai)?.value||'';const cont=q('ad-utm-cont-'+asi+'-'+ai)?.value||'';utmUrl=base+(base.includes('?')?'&':'?')+'utm_source='+src+'&utm_medium='+med+'&utm_campaign='+camp+'&utm_content='+cont;}}let creative='';if(crType==='create'){if(fmt==='Carousel'){creative='Primary Text: '+val('ad-pt-'+asi+'-'+ai)+'
+Cards:
+'+[0,1,2].map(ci=>'  Card '+(ci+1)+': '+val('ad-c'+ci+'-h-'+asi+'-'+ai)+' | '+val('ad-c'+ci+'-d-'+asi+'-'+ai)+' | '+val('ad-c'+ci+'-u-'+asi+'-'+ai)).join('
+');}else{creative='Media: '+val('ad-media-'+asi+'-'+ai)+'
+Primary Text: '+val('ad-pt-'+asi+'-'+ai)+'
+Headline: '+val('ad-hl-'+asi+'-'+ai)+'
+Description: '+val('ad-desc-'+asi+'-'+ai);}}return {name:val('ad-name-'+asi+'-'+ai)||'Ad '+(ai+1),page:q('ad-page-'+asi+'-'+ai)?.options[q('ad-page-'+asi+'-'+ai)?.selectedIndex]?.text||'Account Default Page',ig:q('ad-ig-'+asi+'-'+ai)?.options[q('ad-ig-'+asi+'-'+ai)?.selectedIndex]?.text||'Account Default Instagram',crType,postId:val('ad-postid-'+asi+'-'+ai),fmt,sd:val('ad-sd-'+asi+'-'+ai),url:val('ad-url-'+asi+'-'+ai),durl:val('ad-durl-'+asi+'-'+ai),catalog:q('ad-catalog-'+asi+'-'+ai)?.options[q('ad-catalog-'+asi+'-'+ai)?.selectedIndex]?.text||'',advCr:swOn('ad-advcr-'+asi+'-'+ai)?'ON':'OFF',creative,cta:q('ad-cta-'+asi+'-'+ai)?.value||'',tracking:trackOn?'ON':'OFF',utmUrl};}
+function buildBrief(){const cn=val('campName')||'Campaign';const obj=getTV('objRow')||'OUTCOME_SALES';const bt=getTV('budgetTypeRow')||'CBO';const curr=val('campCurrency')||'USD';const bp=getTV('budgetPeriodRow')||'Daily';const bamt=val('campBudget');const bid=val('bidStrategy')||'LOWEST_COST_WITHOUT_CAP';const accId=APP.account?.id||'unknown';const accName=APP.account?.name||'unknown';let L=[];L.push('You have access to Meta Ads MCP. Create the following campaign EXACTLY as specified.');L.push('All items MUST be created in PAUSED status.
+');L.push('=== AD ACCOUNT ===');L.push(pad('Account ID')+' : '+accId);L.push(pad('Account Name')+' : '+accName+'
+');L.push('=== CAMPAIGN ===');L.push(pad('Name')+' : '+cn);L.push(pad('Objective')+' : '+obj);L.push(pad('Budget Type')+' : '+bt);if(bt==='CBO'){L.push(pad('Currency')+' : '+curr);L.push(pad('Budget Period')+' : '+bp);L.push(pad('Budget')+' : '+(bamt||'—'));}L.push(pad('Bid Strategy')+' : '+bid);if(['LOWEST_COST_WITH_BID_CAP','COST_CAP'].includes(bid))L.push(pad('Bid/Cost Amount')+' : '+(val('bidAmount')||'—')+' '+curr);if(bid==='MINIMUM_ROAS')L.push(pad('ROAS Target')+' : x'+(val('roasVal')||'—'));L.push(pad('Status')+' : PAUSED
+');L.push('=== AD SETS ('+APP.adsetsCount+') ===');for(let i=0;i<APP.adsetsCount;i++){const d=getAsData(i);L.push('
+[AD SET '+(i+1)+'] '+d.name);L.push(pad('Conversion Location')+' : '+d.convLoc);L.push(pad('Performance Goal')+' : '+d.perfGoal);L.push(pad('Dataset/Pixel')+' : '+d.pixel);if(d.convEvent)L.push(pad('Conversion Event')+' : '+d.convEvent);if(d.cprg)L.push(pad('Cost Per Result Goal')+' : '+d.cprg+' '+curr);L.push(pad('Attribution')+' : '+d.attrib);if(bt==='ABO')L.push(pad('Budget')+' : '+(d.budget||'—')+' '+curr+' / '+d.budPeriod);L.push(pad('Start')+' : '+(d.sd||'ASAP')+' '+(d.st||''));if(d.ed)L.push(pad('End')+' : '+d.ed);L.push(pad('Locations')+' : '+(d.loc||'—'));L.push(pad('Age Range')+' : '+d.ageMin+' - '+d.ageMax);L.push(pad('Gender')+' : '+d.gender);if(d.langs)L.push(pad('Languages')+' : '+d.langs);if(d.detail)L.push(pad('Detailed Targeting')+' : '+d.detail+'
+  NOTE: Use closest available match. Skip if unavailable.');if(d.custom)L.push(pad('Custom Audiences')+' : '+d.custom+'
+  NOTE: Check if exist. If yes attach, if no CREATE them first.');if(d.excl)L.push(pad('Exclude Audiences')+' : '+d.excl);L.push(pad('Advantage+ Audience')+' : '+d.aplusAud);L.push(pad('Placement')+' : '+d.placement);if(d.placement==='Manual'&&d.platforms)L.push(pad('Platforms')+' : '+d.platforms);L.push(pad('Exclude Skippable')+' : '+d.skip);}L.push('
+=== ADS ===');for(let i=0;i<APP.adsetsCount;i++){const asN=q('as-name-'+i)?.value||'Ad Set '+(i+1);L.push('
+[AD SET '+(i+1)+' - '+asN+']');for(let j=0;j<APP.adsCount;j++){const d=getAdData(i,j);L.push('
+  [AD '+(j+1)+'] '+d.name);L.push('  '+pad('Facebook Page')+' : '+d.page);L.push('  '+pad('Instagram')+' : '+d.ig);L.push('  '+pad('Creation Type')+' : '+d.crType);if(d.crType==='existing'){L.push('  '+pad('Post ID/URL')+' : '+(d.postId||'—'));}else{L.push('  '+pad('Format')+' : '+d.fmt);if(d.sd)L.push('  '+pad('Schedule')+' : '+d.sd);L.push('  '+pad('Destination URL')+' : '+(d.url||'—'));if(d.durl)L.push('  '+pad('Display URL')+' : '+d.durl);if(d.catalog)L.push('  '+pad('Catalog')+' : '+d.catalog);L.push('  '+pad('Advantage+ Creative')+' : '+d.advCr);d.creative.split('
+').forEach(l=>L.push('  '+l));L.push('  '+pad('CTA')+' : '+d.cta);L.push('  '+pad('Tracking')+' : '+d.tracking);if(d.utmUrl)L.push('  '+pad('UTM URL')+' : '+d.utmUrl);}}}L.push('
+=== EXECUTION INSTRUCTIONS ===');L.push('1. Create campaign in PAUSED status.');L.push('2. Per ad set: use account default pixel if marked Account Default. Create custom audiences if not found.');L.push('3. Per ad: use account default page/IG if marked Account Default.');L.push('4. Confirm all items are PAUSED after creation.');L.push('5. Report: campaign ID, all ad set IDs, all ad IDs, and any substitutions or errors.');return L.join('
+');}
+function buildSummary(){const bt=getTV('budgetTypeRow')||'CBO';const curr=val('campCurrency')||'USD';const bamt=val('campBudget');const obj=getTV('objRow')||'OUTCOME_SALES';const bid=val('bidStrategy')||'';const cn=val('campName')||'Campaign';q('summaryStats').innerHTML='<div class="stat-c"><div class="stat-l">Objective</div><div class="stat-v" style="font-size:12px">'+obj.replace('OUTCOME_','')+'</div></div><div class="stat-c"><div class="stat-l">Budget Type</div><div class="stat-v" style="font-size:12px">'+bt+'</div></div><div class="stat-c"><div class="stat-l">Budget</div><div class="stat-v" style="font-size:12px">'+(bt==='CBO'?(bamt||'—')+' '+curr:'Per Ad Set')+'</div></div><div class="stat-c"><div class="stat-l">Ad Sets / Ads</div><div class="stat-v" style="font-size:12px">'+APP.adsetsCount+' / '+APP.adsCount+'</div></div>';let tree='<div class="tree-camp">📢 '+cn+' <span style="font-size:11px;color:var(--muted);font-weight:400">'+obj.replace('OUTCOME_','')+'</span></div>';for(let i=0;i<APP.adsetsCount;i++){tree+='<div class="tree-adset"><div class="tree-adset-name">🎯 '+(q('as-name-'+i)?.value||'Ad Set '+(i+1))+'</div>';for(let j=0;j<APP.adsCount;j++)tree+='<div class="tree-ad">🖼 '+(q('ad-name-'+i+'-'+j)?.value||'Ad '+(j+1))+'</div>';tree+='</div>';}q('summaryTree').innerHTML=tree;q('briefBox').textContent=buildBrief();if(APP.connector==='composio'){show('connectorNote');q('connectorNote').textContent='Using Composio connector — routing through Composio Meta integration.';}else hide('connectorNote');}
+function copyBrief(){navigator.clipboard.writeText(q('briefBox').textContent).then(()=>{const b=event.target;const o=b.textContent;b.textContent='✅ Copied!';setTimeout(()=>b.textContent=o,2000);});}
+function openInClaude(){window.open('https://claude.ai/new?q='+encodeURIComponent(q('briefBox').textContent),'_blank');}
+async function createCampaign(){const btn=q('createBtn');btn.disabled=true;btn.innerHTML='<span class="spin"></span> Creating...';show('outputPanel');q('outputHd').textContent='🤖 Claude is building your campaign...';const body=q('outputBody');body.textContent='';body.classList.add('thinking');try{const data=await callClaude([{role:'user',content:buildBrief()}],'You are a Meta Ads campaign creation specialist with access to Meta Ads MCP. Create campaigns EXACTLY as specified. Always PAUSED status. Use Meta Ads MCP tools to create the campaign, ad sets, and ads. Create custom audiences if not found. Use closest targeting match. Use account default page/IG when marked as default. After creation report all IDs and any substitutions. Be concise but complete.');body.classList.remove('thinking');const fullText=data.content.map(b=>b.type==='text'?b.text:b.type==='mcp_tool_result'?'[Meta API]
+'+(b.content?.[0]?.text||''):'').filter(Boolean).join('
+
+');body.textContent=fullText||'Campaign submitted. Check Meta Ads Manager to verify.';q('outputHd').textContent='✅ Campaign creation complete';btn.innerHTML='✅ Created';btn.style.background='var(--green)';}catch(err){body.classList.remove('thinking');body.textContent='Error: '+err.message+'
+
+You can copy the brief above and paste it into Claude.ai.';q('outputHd').textContent='⚠️ Error occurred';btn.disabled=false;btn.innerHTML='🔄 Retry';}}
+initStep2();updateBidFields();openModal();
+</script>
+</body>
+</html>
