@@ -255,7 +255,7 @@ hr.dv{border:none;border-top:1px solid var(--bdr);margin:16px 0}
 </div>
 </div>
 <script>
-const APP={step:1,connector:'meta',account:null,accountData:{},adsetsCount:1,adsCount:1};
+const APP={step:1,account:null,accountData:{},adsetsCount:1,adsCount:1};
 const PERF_GOALS={OUTCOME_SALES:['Maximize Conversions','Maximize Conversion Value','Maximize Link Clicks','Maximize Landing Page Views','Maximize Reach'],OUTCOME_LEADS:['Maximize Leads','Maximize Conversions','Maximize Link Clicks','Maximize Reach'],OUTCOME_TRAFFIC:['Maximize Link Clicks','Maximize Landing Page Views','Maximize Reach','Maximize Impressions'],OUTCOME_AWARENESS:['Maximize Reach','Maximize Impressions','Maximize ThruPlay','Maximize 2-Second Views'],OUTCOME_ENGAGEMENT:['Maximize Post Engagement','Maximize ThruPlay','Maximize Reach'],OUTCOME_APP_PROMOTION:['Maximize App Installs','Maximize App Events','Maximize Link Clicks']};
 const CTAS=['Shop Now','Learn More','Sign Up','Book Now','Contact Us','Get Offer','Watch More','Send Message','Subscribe','Download','Get Quote','Apply Now'];
 const q=id=>document.getElementById(id);
@@ -270,11 +270,11 @@ function pad(s,n=22){return String(s).padEnd(n,' ');}
 function addTag(wrap,txt,cls='tag-b'){if(!txt||!wrap)return;const inp=wrap.querySelector('input');const t=document.createElement('span');t.className='tag '+cls;t.innerHTML=txt+' <span class="tag-x" onclick="this.parentNode.remove()">x</span>';wrap.insertBefore(t,inp);}
 function getTags(id){return [...(q(id)?.querySelectorAll('.tag')||[])].map(t=>t.textContent.replace('x','').trim()).filter(Boolean);}
 function makeTagInput(id,cls='tag-b'){const w=q(id);if(!w)return;let inp=w.querySelector('input');if(!inp){inp=document.createElement('input');inp.placeholder='Type and press Enter';w.appendChild(inp);}inp.onkeydown=e=>{if(e.key==='Enter'||e.key===','){e.preventDefault();const v=inp.value.trim();if(v){addTag(w,v,cls);inp.value='';}}if(e.key==='Backspace'&&!inp.value){const ts=w.querySelectorAll('.tag');if(ts.length)ts[ts.length-1].remove();}};w.onclick=()=>inp.focus();}
-function openModal(){show('connModal');}
-function closeModal(){hide('connModal');}
-function selectConn(type){APP.connector=type;q('opt-meta').classList.toggle('sel',type==='meta');q('opt-composio').classList.toggle('sel',type==='composio');}
-function confirmConn(){closeModal();setBadge('connecting');loadAccounts();}
-function setBadge(state,label=''){const badge=q('connBadge'),dot=q('connDot'),txt=q('connBadgeText');badge.className='conn-badge '+(state==='ok'?'ok':state==='err'?'err':'idle');dot.className='dot '+(state==='ok'?'dot-green':state==='err'?'dot-red':'dot-amber');txt.textContent=label||(state==='ok'?'Connected':state==='err'?'Error':'Connecting...');}
+
+
+
+
+
 async function callClaude(messages,sys=''){
   const mcpServers=APP.connector==='meta'?[{type:'url',url:'https://mcp.facebook.com/ads',name:'meta-ads'}]:[{type:'url',url:'https://connect.composio.dev/mcp',name:'composio'}];
   const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys||'You are a helpful Meta Ads assistant.',messages,mcp_servers:mcpServers})});
@@ -501,7 +501,26 @@ hr.dv{border:none;border-top:1px solid var(--bdr);margin:16px 0}
 </head>
 <body>
 <div class="app">
-
+<div class="overlay" id="connModal">
+  <div class="modal">
+    <h2>Connect to Meta Ads</h2>
+    <p class="modal-sub">Choose your connection — both are already authenticated via your Claude session. No API key needed.</p>
+    <div class="conn-opts">
+      <div class="conn-opt sel" id="opt-meta" onclick="selectConn('meta')">
+        <div class="ico">🔵</div><h3>Meta MCP</h3>
+        <p>Direct via Meta's official MCP connector</p>
+      </div>
+      <div class="conn-opt" id="opt-composio" onclick="selectConn('composio')">
+        <div class="ico">⚡</div><h3>Composio</h3>
+        <p>Via Composio — already connected to your Claude session</p>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-ghost btn-sm" onclick="closeModal()">Cancel</button>
+      <button class="btn btn-primary btn-sm" onclick="confirmConn()">Connect</button>
+    </div>
+  </div>
+</div>
 <div class="header">
   <div class="logo">f</div>
   <div class="header-text"><h1>Meta Campaign Planner</h1><p>Build and launch Meta ad campaigns step by step</p></div>
@@ -640,7 +659,7 @@ hr.dv{border:none;border-top:1px solid var(--bdr);margin:16px 0}
 </div>
 </div>
 <script>
-const APP={step:1,connector:'meta',account:null,accountData:{},adsetsCount:1,adsCount:1};
+const APP={step:1,account:null,accountData:{},adsetsCount:1,adsCount:1};
 const PERF_GOALS={OUTCOME_SALES:['Maximize Conversions','Maximize Conversion Value','Maximize Link Clicks','Maximize Landing Page Views','Maximize Reach'],OUTCOME_LEADS:['Maximize Leads','Maximize Conversions','Maximize Link Clicks','Maximize Reach'],OUTCOME_TRAFFIC:['Maximize Link Clicks','Maximize Landing Page Views','Maximize Reach','Maximize Impressions'],OUTCOME_AWARENESS:['Maximize Reach','Maximize Impressions','Maximize ThruPlay','Maximize 2-Second Views'],OUTCOME_ENGAGEMENT:['Maximize Post Engagement','Maximize ThruPlay','Maximize Reach'],OUTCOME_APP_PROMOTION:['Maximize App Installs','Maximize App Events','Maximize Link Clicks']};
 const CTAS=['Shop Now','Learn More','Sign Up','Book Now','Contact Us','Get Offer','Watch More','Send Message','Subscribe','Download','Get Quote','Apply Now'];
 const q=id=>document.getElementById(id);
@@ -655,11 +674,11 @@ function pad(s,n=22){return String(s).padEnd(n,' ');}
 function addTag(wrap,txt,cls='tag-b'){if(!txt||!wrap)return;const inp=wrap.querySelector('input');const t=document.createElement('span');t.className='tag '+cls;t.innerHTML=txt+' <span class="tag-x" onclick="this.parentNode.remove()">x</span>';wrap.insertBefore(t,inp);}
 function getTags(id){return [...(q(id)?.querySelectorAll('.tag')||[])].map(t=>t.textContent.replace('x','').trim()).filter(Boolean);}
 function makeTagInput(id,cls='tag-b'){const w=q(id);if(!w)return;let inp=w.querySelector('input');if(!inp){inp=document.createElement('input');inp.placeholder='Type and press Enter';w.appendChild(inp);}inp.onkeydown=e=>{if(e.key==='Enter'||e.key===','){e.preventDefault();const v=inp.value.trim();if(v){addTag(w,v,cls);inp.value='';}}if(e.key==='Backspace'&&!inp.value){const ts=w.querySelectorAll('.tag');if(ts.length)ts[ts.length-1].remove();}};w.onclick=()=>inp.focus();}
-function openModal(){show('connModal');}
-function closeModal(){hide('connModal');}
-function selectConn(type){APP.connector=type;q('opt-meta').classList.toggle('sel',type==='meta');q('opt-composio').classList.toggle('sel',type==='composio');}
-function confirmConn(){closeModal();setBadge('connecting');loadAccounts();}
-function setBadge(state,label=''){const badge=q('connBadge'),dot=q('connDot'),txt=q('connBadgeText');badge.className='conn-badge '+(state==='ok'?'ok':state==='err'?'err':'idle');dot.className='dot '+(state==='ok'?'dot-green':state==='err'?'dot-red':'dot-amber');txt.textContent=label||(state==='ok'?'Connected':state==='err'?'Error':'Connecting...');}
+
+
+
+
+
 async function callClaude(messages,sys=''){
   const mcpServers=APP.connector==='meta'?[{type:'url',url:'https://mcp.facebook.com/ads',name:'meta-ads'}]:[{type:'url',url:'https://connect.composio.dev/mcp',name:'composio'}];
   const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,system:sys||'You are a helpful Meta Ads assistant.',messages,mcp_servers:mcpServers})});
@@ -716,7 +735,7 @@ async function createCampaign(){const btn=q('createBtn');btn.disabled=true;btn.i
 ');body.textContent=fullText||'Campaign submitted. Check Meta Ads Manager to verify.';q('outputHd').textContent='✅ Campaign creation complete';btn.innerHTML='✅ Created';btn.style.background='var(--green)';}catch(err){body.classList.remove('thinking');body.textContent='Error: '+err.message+'
 
 You can copy the brief above and paste it into Claude.ai.';q('outputHd').textContent='⚠️ Error occurred';btn.disabled=false;btn.innerHTML='🔄 Retry';}}
-initStep2();updateBidFields();openModal();
+initStep2();updateBidFields();
 </script>
 </body>
-</html>
+</html
