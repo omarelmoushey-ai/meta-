@@ -1,1 +1,10 @@
-{"rewrites": [{"source": "/(.*)", "destination": "/index.html"}]}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #080b14; --s2: #121829; --s3: #182035; --s4: #1e2840; --s5: #263150;
+  --bdr: #263050; --bdr2: #334070; --text: #dde4f5; --muted: #6878a0; --dim: #3a4868;
+  --blue: #4070f5; --blue-d: #2f5de0; --green: #1dd17a; --red: #f04060; --amber: #f5a623;
+}
+html { font-size: 14px; }
+body { font-family: "DM Sans", system-ui, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; -webkit-font-smoothing: antialiased; }
+input, select, textarea, button { font-family: inherit; }
+* { outline: none; }
