@@ -9,7 +9,8 @@ const PERF_GOALS = {
   OUTCOME_APP_PROMOTION: ["Maximize App Installs","Maximize App Events","Maximize Link Clicks"],
 };
 const CTAS = ["Shop Now","Learn More","Sign Up","Book Now","Contact Us","Get Offer","Watch More","Send Message","Subscribe","Download","Get Quote","Apply Now"];
-const N8N = "https://moshi-md.app.n8n.cloud/webhook/meta-campaign";
+const BOT_TOKEN = "8722904784:AAHgxCtePp_ixkyBjv3mllJ5XP1NBLWlVhg";
+const TG_API = `https://api.telegram.org/bot${BOT_TOKEN}`;
 
 const css = {
   app: { maxWidth: 940, margin: "0 auto", padding: "28px 16px 100px" },
@@ -93,13 +94,14 @@ function F({ lbl, note, children }) {
 const defAs = () => ({ name:"", convLoc:"Website", perfGoal:"Maximize Conversions", pixelType:"account_default", pixelCustom:"", convEvent:"Purchase", cprg:"", attrib:"7-day click + 1-day view", budPeriod:"Daily", budget:"", sd:"", st:"", ed:"", loc:"", ageMin:"18", ageMax:"65", gender:"All", langs:[], detail:[], custom:[], excl:[], aplusAud:false, advPl:true, platforms:[], skipStream:false });
 const defAd = () => ({ name:"", pageId:"account_default", igId:"account_default", crType:"create", postId:"", format:"Single Image / Video", sd:"", mediaUrl:"", url:"", durl:"", advCr:true, pt:"", hl:"", desc:"", cta:"Shop Now", tracking:true, utmSrc:"{{site_source_name}}", utmMed:"paid_social", utmCamp:"{{campaign.id}}", utmCont:"{{ad.id}}" });
 
-function Step1({ name, setName, onNext }) {
+function Step1({ name, setName, chatId, setChatId, onNext }) {
   return (
     <div>
       <div style={css.card}>
         <div style={css.cardHd}><div style={css.cardIco}>🏢</div>Ad Account</div>
         <div style={css.info}>Enter your account name exactly as it appears in <strong>Meta Ads Manager</strong>. n8n will resolve the Account ID automatically.</div>
         <F lbl="Account Name"><input style={css.inp} value={name} onChange={e=>setName(e.target.value)} placeholder="e.g. My Business Account" autoFocus /></F>
+        <F lbl="Telegram Chat ID" note="The chat where approval messages are sent. Message @userinfobot on Telegram to get your Chat ID."><input style={css.inp} value={chatId} onChange={e=>setChatId(e.target.value)} placeholder="-1001234567890" /></F>
       </div>
       <div style={css.navRow}><span/><button style={{...css.btn("primary"),opacity:name.trim()?1:.35,cursor:name.trim()?"pointer":"not-allowed"}} onClick={()=>name.trim()&&onNext()}>Next: Campaign Setup →</button></div>
     </div>
@@ -248,20 +250,21 @@ function Step4({ adSets, ads, setAds, onNext, onBack }) {
   );
 }
 
-function buildPayload(accName, camp, adSets, ads) {
+function buildPayload(accName, chatId, camp, adSets, ads) {
   return {
     account_name: accName,
+    chat_id: chatId,
     campaign: { name:camp.name||"Campaign", objective:camp.objective, budget_type:camp.budgetType, currency:camp.currency, bid_strategy:camp.bidStrategy, daily_budget:camp.budgetType==="CBO"&&camp.budPeriod==="Daily"&&camp.budget?Math.round(parseFloat(camp.budget)*100):null, lifetime_budget:camp.budgetType==="CBO"&&camp.budPeriod==="Lifetime"&&camp.budget?Math.round(parseFloat(camp.budget)*100):null, status:"PAUSED" },
     ad_sets: adSets.map((a,i)=>({ name:a.name||`Ad Set ${i+1}`, optimization_goal:a.perfGoal, billing_event:"IMPRESSIONS", targeting:{ age_min:parseInt(a.ageMin), age_max:parseInt(a.ageMax), ...(a.gender==="Male"?{genders:[1]}:a.gender==="Female"?{genders:[2]}:{}), ...(a.loc?{geo_locations:{countries:a.loc.split(",").map(s=>s.trim()).filter(Boolean)}}:{}), ...(a.langs.length?{locales:a.langs}:{}), ...(a.detail.length?{flexible_spec:[{interests:a.detail.map(d=>({name:d}))}]}:{}) }, pixel_id:a.pixelType==="custom"?a.pixelCustom:"Account Default", conversion_event:a.convEvent, start_time:a.sd||null, end_time:a.ed||null, advantage_plus_audience:a.aplusAud, placement:a.advPl?"Advantage+":"Manual", daily_budget:camp.budgetType==="ABO"&&a.budget?Math.round(parseFloat(a.budget)*100):null, custom_audiences:a.custom, excluded_audiences:a.excl, status:"PAUSED" })),
     ads: adSets.flatMap((_,asi)=>(ads[asi]||[]).map((ad,ai)=>({ name:ad.name||`Ad ${ai+1}`, ad_set_index:asi, page_id:ad.pageId, instagram_id:ad.igId, creation_type:ad.crType, existing_post_id:ad.crType==="existing"?ad.postId:null, format:ad.format, creative:{ image_url:ad.mediaUrl, body:ad.pt, title:ad.hl, description:ad.desc, link_url:ad.tracking&&ad.url?`${ad.url}${ad.url.includes("?")?"&":"?"}utm_source=${ad.utmSrc}&utm_medium=${ad.utmMed}&utm_campaign=${ad.utmCamp}&utm_content=${ad.utmCont}`:ad.url, call_to_action:ad.cta.toUpperCase().replace(/ /g,"_") }, advantage_plus_creative:ad.advCr, status:"PAUSED" }))),
   };
 }
 
-function Step5({ accName, camp, adSets, ads, onBack }) {
+function Step5({ accName, chatId, camp, adSets, ads, onBack }) {
   const [status, setStatus] = useState("idle");
   const [err, setErr] = useState("");
   const [copied, setCopied] = useState(false);
-  const payload = buildPayload(accName, camp, adSets, ads);
+  const payload = buildPayload(accName, chatId, camp, adSets, ads);
   const brief = JSON.stringify(payload, null, 2);
   const totalAds = adSets.reduce((n,_,i)=>n+(ads[i]||[]).length,0);
 
@@ -269,8 +272,14 @@ function Step5({ accName, camp, adSets, ads, onBack }) {
   const send = async () => {
     setStatus("sending");
     try {
-      const r = await fetch(N8N, { method:"POST", headers:{"Content-Type":"application/json"}, body:JSON.stringify(payload) });
-      if(!r.ok) throw new Error("Webhook returned "+r.status);
+      if(!payload.chat_id) throw new Error("Telegram Chat ID is required. Enter it in Step 1.");
+      const r = await fetch(`${TG_API}/sendMessage`, {
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({ chat_id: payload.chat_id, text: JSON.stringify(payload) }),
+      });
+      const rd = await r.json();
+      if(!rd.ok) throw new Error("Telegram error: " + (rd.description || r.status));
       setStatus("sent");
     } catch(e) { setErr(e.message); setStatus("error"); }
   };
@@ -310,6 +319,7 @@ const defCamp = { name:"", objective:"OUTCOME_SALES", budgetType:"CBO", currency
 export default function App() {
   const [step, setStep] = useState(1);
   const [accName, setAccName] = useState("");
+  const [chatId, setChatId] = useState("");
   const [camp, setCamp] = useState(defCamp);
   const [adSets, setAdSets] = useState([defAs()]);
   const [ads, setAds] = useState([[defAd()]]);
@@ -324,11 +334,11 @@ export default function App() {
       <div style={css.steps}>
         {STEPS.map((n,i)=>{const a=step===i+1,d=step>i+1;return(<button key={i} style={css.stepBtn(a,d)} onClick={()=>d&&go(i+1)}><span style={css.stepNum(a,d)}>{d?"✓":i+1}</span>{n}</button>);})}
       </div>
-      {step===1&&<Step1 name={accName} setName={setAccName} onNext={()=>go(2)} />}
+      {step===1&&<Step1 name={accName} setName={setAccName} chatId={chatId} setChatId={setChatId} onNext={()=>go(2)} />}
       {step===2&&<Step2 c={camp} setC={setCamp} onNext={()=>go(3)} onBack={()=>go(1)} />}
       {step===3&&<Step3 adSets={adSets} setAdSets={a=>{setAdSets(a);setAds(a.map((_,i)=>ads[i]||[defAd()]));}} onNext={()=>go(4)} onBack={()=>go(2)} camp={camp} />}
       {step===4&&<Step4 adSets={adSets} ads={ads} setAds={setAds} onNext={()=>go(5)} onBack={()=>go(3)} />}
-      {step===5&&<Step5 accName={accName} camp={camp} adSets={adSets} ads={ads} onBack={()=>go(4)} />}
+      {step===5&&<Step5 accName={accName} chatId={chatId} camp={camp} adSets={adSets} ads={ads} onBack={()=>go(4)} />}
     </div>
   );
 }
