@@ -273,10 +273,29 @@ function Step5({ accName, chatId, camp, adSets, ads, onBack }) {
     setStatus("sending");
     try {
       if(!payload.chat_id) throw new Error("Telegram Chat ID is required. Enter it in Step 1.");
+      const slim = {
+        account_name: payload.account_name,
+        chat_id: payload.chat_id,
+        campaign: payload.campaign,
+        ad_sets: (payload.ad_sets||[]).map(as => ({
+          name: as.name, optimization_goal: as.optimization_goal,
+          billing_event: as.billing_event, targeting: as.targeting,
+          pixel_id: as.pixel_id, conversion_event: as.conversion_event,
+          daily_budget: as.daily_budget, start_time: as.start_time,
+          end_time: as.end_time, status: as.status,
+        })),
+        ads: (payload.ads||[]).map(ad => ({
+          name: ad.name, ad_set_index: ad.ad_set_index,
+          page_id: ad.page_id, format: ad.format,
+          creative: ad.creative, status: ad.status,
+        })),
+      };
+      const msgText = JSON.stringify(slim);
+      if (msgText.length > 4000) throw new Error("Payload too large ("+msgText.length+" chars > 4000). Reduce ad sets or ads.");
       const r = await fetch(`${TG_API}/sendMessage`, {
         method:"POST",
         headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({ chat_id: payload.chat_id, text: JSON.stringify(payload) }),
+        body:JSON.stringify({ chat_id: payload.chat_id, text: msgText }),
       });
       const rd = await r.json();
       if(!rd.ok) throw new Error("Telegram error: " + (rd.description || r.status));
